@@ -1,25 +1,49 @@
-class Ping(process):
-  def setup(pong): pass
-  def run():
-      send(('Ping',), to=pong)
-      await(received(('Pong',)))
-      output("Ponged.")
+import sys
+from random import randint
+TIMEOUT = 1
 
-  def receive(msg= (n)):
-    print(n[0])
+class AnotherMain(process):
+	def setup(a): pass
 
-class Pong(process):
-  def setup(): pass
-  def run():
-      await(some(received(('Ping',), from_=ping)))
-      output("Pinged.")
-      send(('Pong',), to=ping)
+	def run():
+		send(('proposal_event', 5), to=a)
+		send(('vote_event', 5), to=a)
+		send(('timeout_event', 5), to=a)
+		send(('done',), to=a)
 
-  def receive(msg = (n)):
-    print(n[0])
+	def receive(msg = (n)):
+		print(n[0])
+
+class Main(process):
+	def setup(): pass
+
+	def run():
+		while not received(('done',)):
+			if await(received(('proposal_event', 5), from_= b)):
+				pass
+			elif await(received(('vote_event', 5), from_= b)):
+				pass
+			elif await(some(received(('timeout_event', 5), from_= b))):
+				pass
+
+
+
+	def receive(msg= ('vote_event',n), from_= b):
+		print(n) 
+		output("Received Vote event from Node")
+
+	def receive(msg= ('proposal_event',n), from_= b):
+		print(n+1) 
+		output("Received Proposal event from Node")
+
+	def receive(msg= ('timeout_event',n), from_= b):
+		print(n+2)
+		output("Received Timeout event from Node")
+
 
 def main():
-  pong = new(Pong, args=(), at='PongNode')
-  ping = new(Ping, args=(pong,))
-  start(pong)
-  start(ping)
+
+	a = new(Main, args=(), at='MainNode')
+	b = new(AnotherMain, args=(a,))
+	start(a)
+	start(b)
