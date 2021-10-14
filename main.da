@@ -1,0 +1,25 @@
+class Ping(process):
+  def setup(pong): pass
+  def run():
+      send(('Ping',), to=pong)
+      await(received(('Pong',)))
+      output("Ponged.")
+
+  def receive(msg= (n)):
+    print(n[0])
+
+class Pong(process):
+  def setup(): pass
+  def run():
+      await(some(received(('Ping',), from_=ping)))
+      output("Pinged.")
+      send(('Pong',), to=ping)
+
+  def receive(msg = (n)):
+    print(n[0])
+
+def main():
+  pong = new(Pong, args=(), at='PongNode')
+  ping = new(Ping, args=(pong,))
+  start(pong)
+  start(ping)
