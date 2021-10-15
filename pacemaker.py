@@ -1,4 +1,4 @@
-#import BLOCK_TREE
+#from blockTree import BlockTree
 
 class Pacemaker:
     def __init__(self, current_round, last_round_tc, pending_timouts, block_tree):
