@@ -1,5 +1,5 @@
-#from block_tree import LedgerCommitInfo, TimeoutInfo, VoteInfo, VoteMsg, BlockTree
-#from ledger import Ledger
+# from .blockTree import LedgerCommitInfo, TimeoutInfo, VoteInfo, VoteMsg, BlockTree
+from ledger import Ledger
 
 class Safety:
     def __init__(self, private_key, public_keys, block_tree, ledger, utils):
@@ -40,7 +40,7 @@ class Safety:
     def __commit_state_id_candidate(self, block_round, qc):
         if self.__consecutive(block_round,qc.vote_info.round):
             # argument qc.vote_info.parent_id == block id?
-            return self.ledger.pending_state(qc.vote_info.parent_id)
+            return self.ledger.pending_state(qc.vote_info.id)
         else:
             return None
     
