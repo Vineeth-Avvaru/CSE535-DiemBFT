@@ -15,6 +15,13 @@ class AnotherMain(process):
 		print(n[0])
 
 class Main(process):
+	def __init__():
+		#TODO : initialize classes appropriately
+		block_tree = BlockTree()
+		leader_election = LeaderElection()
+		pacemaker = Pacemaker()
+		mempool = Mempool()
+
 	def setup(): pass
 
 	def run():
@@ -40,10 +47,59 @@ class Main(process):
 		print(n+2)
 		output("Received Timeout event from Node")
 
+	def process_certificate_qc(qc)
+		block_tree.process_qc(qc)
+		leader_election.update_leaders(qc)
+		pacemaker.advance_round(qc.vote_info.round)
+
+	def process_proposal_msg(P)
+		process_certificate_qc(P.block.qc)
+		process_certificate_qc(P.high_commit_qc)
+
+		pacemaker.advance_round_tc(P.last_round_tc)
+
+		round = pacemaker.current_round
+		leader = leader_election.get_leader(current_round)
+
+		if P.block.round != round or P.sender != leader or P.block.author != leader:
+			return
+
+		block_tree.execute_and_insert(P) # Adds a new speculative state to the Ledger
+		vote_msg = Safety.make_vote(P.block, P.last_round_tc)
+		if vote_msg not None:
+			# TODO: implement sending vote message
+			# pass
+			#send vote_msg to leader_election.get_leader(current_round + 1)
+
+	def process_timeout_msg(M)
+		process_certificate_qc(M.tmo_info.high_qc)
+		process_certificate_qc(M.high_commit_qc)
+		pacemaker.advance_round_tc(M.last_round_tc)
+		tc = pacemaker.process_remote_timeout(M)
+		if tc not None:
+			pacemaker.advance_round(tc)
+			process_new_round_event(tc)
+
+	def process_vote_msg(M)
+		qc = block_tree.process_vote(M)
+		if qc not None:
+			process_certificate_qc(qc)
+			process_new_round_event(None)
+
+	def process_new_round_event(last_tc)
+		if u == leader_election.get_leader(pacemaker.current_round):
+			# Leader code: generate proposal.
+			b = block_tree.generate_block(mempool.get_transactions(),
+			pacemaker.current round)
+			#Todo: broadcast proposal messsage
+			#broadcast ProposalMsghb; last tc; block_tree:high commit qci
+
 
 def main():
 
 	a = new(Main, args=(), at='MainNode')
 	b = new(AnotherMain, args=(a,))
+
 	start(a)
 	start(b)
+
