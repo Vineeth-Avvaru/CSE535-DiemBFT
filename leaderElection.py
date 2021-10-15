@@ -25,8 +25,9 @@ class LeaderElection:
                 last_authors.add(block_author)
             current_qc = current_block.qc
             i += 1
+        updated_validators = [v for v in active_validators if v not in last_authors]
         random.seed(self.seed)
-        return random.choice(active_validators)
+        return random.choice(updated_validators)
 
     def update_leaders(self, qc):
         extended_round = qc.vote_info.round
