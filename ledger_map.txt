@@ -1,0 +1,41 @@
+
+BlockID = 1
+Txns: transaction_1
+StateID: 0
+Next Block ID: 3
+-----------------------------------------------
+BlockID = 2
+Txns: transaction_2
+StateID: 1
+Prev Block ID: 1
+-----------------------------------------------
+BlockID = 1
+Txns: transaction_1
+StateID: transaction_1
+Next Block ID: 3
+-----------------------------------------------
+BlockID = 2
+Txns: transaction_2
+StateID: transaction_1#transaction_2
+Prev Block ID: 1
+-----------------------------------------------
+BlockID = 1
+Txns: transaction_1
+StateID: transaction_1
+Next Block ID: 3
+-----------------------------------------------
+BlockID = 2
+Txns: transaction_2
+StateID: transaction_1#transaction_2
+Prev Block ID: 1
+-----------------------------------------------
+BlockID = 1
+Txns: transaction_1
+StateID: transaction_1
+Next Block ID: 3
+-----------------------------------------------
+BlockID = 2
+Txns: transaction_2
+StateID: transaction_1#transaction_2
+Prev Block ID: 1
+-----------------------------------------------
