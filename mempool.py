@@ -1,14 +1,27 @@
 class Mempool:
 	def __init__(self):
-		self.transaction_mapping = {}
+		self.transaction_list = []
 
-	def insert(self, transaction):
-		self.transaction_mapping[transaction.id] = transaction
+	def insert(self, transaction_id, node_id):
+		self.transaction_list.append({
+				transaction_id : transaction_id,
+				node_id : node_id,
+				state : "NOT_PROCESSED"
+			})
+
+	def update_state(self, transaction_id, state):
+		for t in self.transaction_list:
+			if t.transaction_id == transaction_id:
+				t.state = state
+				return True
+		return False
 
 	def get_transactions(self):
-		transaction_list = []
+		transaction_selected = None
 
-		for k, v in self.transaction_mapping:
-			transaction_list.append(v)
+		for t in self.transaction_list:
+			if t.state == "NOT_PROCESSED":
+				transaction_selected = t
+				return transaction_selected
 
-		return transaction_list
+		return transaction_selected
