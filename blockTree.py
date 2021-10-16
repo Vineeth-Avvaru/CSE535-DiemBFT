@@ -5,17 +5,19 @@ import collections
 from hashing import Hashing
 
 class BlockTree:
-    def __init__(self, high_qc, high_commit_qc, f, ledger):
+    def __init__(self, high_qc, high_commit_qc, f, ledger, mempool):
         self.pending_block_tree = PendingBlockTree()
         self.pending_votes = collections.defaultdict(set)
         self.high_qc = high_qc
         self.high_commit_qc = high_commit_qc
         self.f = f
         self.ledger = ledger
+        self.mempool = mempool
     
     def process_qc(self, qc, node_id):
         if qc.ledger_commit_info.commit_state_id is not None:
             self.ledger.commit(qc.vote_info.parent_id, node_id)
+            self.mempool.update_state(qc.vote_info.id.payload, "COMMIT")
             self.pending_block_tree.prune(qc.vote_info.parent_id)
             if(qc.vote_info.round > self.high_commit_qc.vote_info.round):
                 self.high_commit_qc = qc
@@ -25,6 +27,7 @@ class BlockTree:
 
     def execute_and_insert(self, b):
         self.ledger.speculate(b.qc.block_id, b.id, b.payload)
+        self.mempool.update_state(b.payload, "PENDING")
         self.pending_block_tree.add(b)
         return 
 
