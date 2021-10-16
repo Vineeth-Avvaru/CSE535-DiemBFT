@@ -1,7 +1,9 @@
+from _typeshed import Self
 import sys
 import ledger
 import collections
 from hashing import Hashing
+from anytree import Node
 
 class BlockTree:
     def __init__(self, high_qc, high_commit_qc, f):
@@ -18,7 +20,7 @@ class BlockTree:
             if(qc.vote_info.round > self.high_commit_qc.vote_info.round):
                 self.high_commit_qc = qc
         if(qc.vote_info.round > self.high_qc.vote_info.round):
-            self.high_qc = qc.vote_info.round
+            self.high_qc = qc
         return 
 
     def execute_and_insert(self, b):
@@ -30,15 +32,13 @@ class BlockTree:
         self.process_qc(v.high_commit_qc)
         vote_idx = Hashing.hash(v.ledger_commit_info)
         self.pending_votes[vote_idx] =   self.pending_votes[vote_idx].add(v.sign)
-        #should have >= 2f+1, qc and vote message does not have state id
-        if len(self.pending_votes) >= 2  * self.f +1:
-            # signatures == votes? probably yes
+        if len(self.pending_votes) >= 2*self.f+1:
             return QC(vote_info= v.vote_info, state_id= v.state_id, signatures= self.pending_votes[vote_idx])
         return None
 
     def generate_block(self, txns, current_round):
-        #Set author properly
-        block = Block(author=1, round = current_round, payload = txns, qc = self.high_qc)
+        # Have to set author
+        block = Block(author=1 , round = current_round, payload = txns, qc = self.high_qc)
         block.id = Hashing.hash(block.author, block.round, block.payload, self.high_qc.vote_info.id, self.high_qc.signatures)
         return block
 
@@ -70,20 +70,20 @@ class QC:
         self.state_id = state_id
 
 class Block:
-    def __init__(self, author, round, payload, qc, id = None):
+    def __init__(self, author, round, payload, qc, id = None, childBlocks = list()):
         self.author = author
         self.round = round
         self.payload = payload
         self.qc = qc
         self.id = id
+        self.childBlocks = childBlocks
 
 class TimeoutInfo:
     def __init__(self, round, high_qc):
-        # sender <- u
-        # signature <- sign(round, high_qc.round)
-        # TODO: ^ASK TA
         self.round = round
         self.high_qc = high_qc
+        # sender <- u
+        # signature <- sign(round, high_qc.round)
 
 class TC:
     def __init__(self, round, tmo_high_qc_rounds, tmo_signatures):
@@ -99,20 +99,29 @@ class TimeoutMsg:
 
 class ProposalMsg:
     def __init__(self, block, last_round_tc, high_commit_tc):
-        # signature <- sign(block_id)
-        # TODO: ^ASK TA
         self.block = block
         self.last_round_tc = last_round_tc
         self.high_commit_tc = high_commit_tc
+        # signature <- sign(block_id)
 
 class PendingBlockTree:
     def __init__(self):
-        #TODO
+        self.genesis_block = Block(author= 'genesis', round=0, payload = None , qc = None, id = None, childBlocks=list())
+    def add(self, b):
+        parent_block = self.find(genesis_block,b.qc.vote_info.parent_id)
+        parent_block.childBlocks.append(b)
         return
-    def add(b):
-        #TODO
-        return
+    # Find the block with id
+    def find(root = genesis_block, id):
+        for i in range(0, len(root.childBlocks)):
+            block = root.childBlocks[i]
+            if block.id == id :
+                return block
+            else:
+                root = block
+                return find(root, id)
+        return 
 
-    def prune(parent_id):
-        #TODO
+    def prune(self,parent_id):
+        self.genesis_block = self.find(parent_id)
         return
