@@ -6,16 +6,17 @@ from hashing import Hashing
 from anytree import Node
 
 class BlockTree:
-    def __init__(self, high_qc, high_commit_qc, f):
+    def __init__(self, high_qc, high_commit_qc, f, ledger):
         self.pending_block_tree = PendingBlockTree()
         self.pending_votes = collections.defaultdict(set)
         self.high_qc = high_qc
         self.high_commit_qc = high_commit_qc
         self.f = f
+        self.ledger = ledger
     
     def process_qc(self, qc):
         if qc.ledger_commit_info.commit_state_id is not None:
-            Ledger.commit(qc.vote_info.parent_id)
+            self.ledger.commit(qc.vote_info.parent_id)
             self.pending_block_tree.prune(qc.vote_info.parent_id)
             if(qc.vote_info.round > self.high_commit_qc.vote_info.round):
                 self.high_commit_qc = qc
@@ -24,7 +25,7 @@ class BlockTree:
         return 
 
     def execute_and_insert(self, b):
-        Ledger.speculate(b.qc.block_id, b.id, b.payload)
+        self.ledger.speculate(b.qc.block_id, b.id, b.payload)
         self.pending_block_tree.add(b)
         return 
 
@@ -108,18 +109,18 @@ class PendingBlockTree:
     def __init__(self):
         self.genesis_block = Block(author= 'genesis', round=0, payload = None , qc = None, id = None, childBlocks=list())
     def add(self, b):
-        parent_block = self.find(genesis_block,b.qc.vote_info.parent_id)
+        parent_block = self.find(self.genesis_block,b.qc.vote_info.parent_id)
         parent_block.childBlocks.append(b)
         return
     # Find the block with id
-    def find(root = genesis_block, id):
+    def find(self, root, id):
         for i in range(0, len(root.childBlocks)):
             block = root.childBlocks[i]
             if block.id == id :
                 return block
             else:
                 root = block
-                return find(root, id)
+                return self.find(root, id)
         return 
 
     def prune(self,parent_id):
