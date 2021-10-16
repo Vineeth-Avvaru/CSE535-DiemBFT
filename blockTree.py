@@ -3,7 +3,6 @@ import sys
 import ledger
 import collections
 from hashing import Hashing
-from anytree import Node
 
 class BlockTree:
     def __init__(self, high_qc, high_commit_qc, f, ledger):
