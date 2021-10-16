@@ -64,6 +64,7 @@ class Ledger:
 
     def commit(self, block_id, node_id):
 
+        print("COMMITING HAPPENING HERE")
         #TODO: Prune neglected branches, ask TA how to commit blocks
 
         if block_id not in self.pending_block_map:

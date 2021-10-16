@@ -8,14 +8,23 @@ from ledger import Ledger
 from safety import Safety
 from hashing import Hashing
 TIMEOUT = 1
-N = 10
+N = 2
 
 def init_config():
-	config = {}
+	config = {
+		'window_size': 1,
+		'exclude_size': 1,
+		'seed':"grabage"
+	}
 	return config
 
 class Validator(process):
-	def __init__():
+
+	def setup(node_id, validators_list): 
+		self.node_id = node_id
+		self.validators_list = validators_list
+
+	def run():
 		self.config = init_config()
 		self.file_path = "./ledger_map"
 
@@ -28,23 +37,12 @@ class Validator(process):
 		
 
 		self.pacemaker = Pacemaker(self.block_tree, self.config)
-
-
-		
-
-	def setup(node_id, validators_list): 
-		pass
-
-	def run():
-		self.leader_election = LeaderElection(self.validators_list, self.config.window_size, self.config.exclude_size, self.config.seed, self.ledger, self.pacemaker)	
+		self.leader_election = LeaderElection(self.validators_list, self.config['window_size'], self.config['exclude_size'], self.config['seed'], self.ledger, self.pacemaker)	
 
 		while not received(('done',)):
-			if await(received((msgType, 5), from_= b)):
+			# if await(received((msgType, 5))):
+			if await(True):
 				pass
-			# elif await(received(('vote_event', 5), from_= b)):
-			# 	pass
-			# elif await(some(received(('timeout_event', 5), from_= b))):
-			# 	pass
 			elif timeout(TIMEOUT):
 				# pacemaker.local_timeout_round()
 				debug("local timeout")
@@ -52,8 +50,8 @@ class Validator(process):
 
 
 
-	def receive(msg= (msgType, obj), from_= b):
-		output("Received Vote event from Node")
+	def receive(msg= (msgType, obj)):
+		output(msgType, obj)
 
 		if msgType == "local_timeout":
 			self.local_timeout_round()
@@ -122,21 +120,20 @@ class Validator(process):
 		pass
 
 class Client(process):
-	def __init__():
-		pass
-		
 
-	def setup(node_id, validators_list): 
-		pass
+	def setup(node_id, validators_list):
+		self.node_id = node_id
+		self.validators_list = validators_list
 
 	def run():
-		for i in range(5):
+		for i in range(1):
 			obj = {
-				'transaction_id' : str(self.node_id*5 + i),
+				'transaction_id' : str(self.node_id*1 + i),
 				'node_id' : self.node_id
 			}
 
 			send(('request', obj), to=self.validators_list)
+		pass
 
 
 
@@ -145,15 +142,14 @@ def main():
 	num_servers = N
 	num_clients = N
 
+	print("INIT HAPPENING HERE")
 	clients = new(Client, num = num_clients)
 	validators = new(Validator, num= num_servers)
-
 	#Can add new variables to setup if necessary
 	for i, validator in enumerate(validators):
-		setup(validator, (i, list(validators)))
+		setup(validator, args=(i, list(validators)))
 
 	for i, client in enumerate(clients):
-		setup(client, (i, list(validators)))
-
+		setup(client, args=(i, list(validators)))
 	start(validators)
 	start(clients)
