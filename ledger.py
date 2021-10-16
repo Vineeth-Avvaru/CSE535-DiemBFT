@@ -62,7 +62,7 @@ class Ledger:
             return None
         return pending_state_block.state_id
 
-    def commit(self, block_id):
+    def commit(self, block_id, node_id):
 
         #TODO: Prune neglected branches, ask TA how to commit blocks
 
@@ -71,11 +71,11 @@ class Ledger:
             return
         block = self.pending_block_map[block_id]
         if block.prev is not None:
-            self.commit(block.prev.block_id)
+            self.commit(block.prev.block_id, node_id)
         try:
-            ledger_file = open(self.ledger_file_path, "a")
+            ledger_file = open(self.ledger_file_path + str(node_id) + ".txt", "a")
         except OSError:
-            print("Error in reading file: ", self.ledger_file_path)
+            print("Error in reading file: ", self.ledger_file_path + str(node_id) + ".txt")
             print(OSError)
             return
         ledger_file.write(str(block))
@@ -93,17 +93,17 @@ class Ledger:
 
 def main():
 
-    block1 = SpeculatedBlock()
-    file_path = "./ledger_map.txt"
-    ledger1 = Ledger(file_path=file_path)
-    ledger1.speculate(0, 1, txns = "transaction_1")
-    ledger1.speculate(1, 2,txns =  "transaction_2")
-    ledger1.speculate(1, 3, txns = "transaction_3")
-    print("*************************")
-    ledger1.print_map()
-    ledger1.commit(2)
-    print("*************************")
-    ledger1.print_map()
+    # block1 = SpeculatedBlock()
+    # file_path = "./ledger_map.txt"
+    # ledger1 = Ledger(file_path=file_path)
+    # ledger1.speculate(0, 1, txns = "transaction_1")
+    # ledger1.speculate(1, 2,txns =  "transaction_2")
+    # ledger1.speculate(1, 3, txns = "transaction_3")
+    # print("*************************")
+    # ledger1.print_map()
+    # ledger1.commit(2, node_id)
+    # print("*************************")
+    # ledger1.print_map()
 
 if __name__ == '__main__':
     main()

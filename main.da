@@ -1,56 +1,71 @@
 import sys
 from random import randint
+import BlockTree
+import LeaderElection
+import Pacemaker
+import Mempool
+import Ledger
+import Safety
+import Hashing
 TIMEOUT = 1
 N = 10
 
-class AnotherMain(process):
-	def setup(a): pass
+def init_config():
+	config = {}
+	return config
 
-	def run():
-		send(('proposal_event', 5), to=a)
-		send(('vote_event', 5), to=a)
-		send(('timeout_event', 5), to=a)
-		send(('done',), to=a)
-
-	def receive(msg = (n)):
-		print(n[0])
-
-class Main(process):
+class Validator(process):
 	def __init__():
 		#TODO : initialize classes appropriately
-		block_tree = BlockTree()
-		leader_election = LeaderElection()
-		pacemaker = Pacemaker()
-		mempool = Mempool()
 
-	def setup(node_id, list_nodes): 
+		self.config = init_config()
+		self.file_path = "./ledger_map"
+
+    	self.ledger = Ledger(file_path=file_path)
+		self.block_tree = BlockTree(0, 0, 0, ledger)
+		self.hashing = Hashing()
+
+		self.safety = Safety("", [], self.block_tree, self.ledger)
+		
+
+		self.pacemaker = Pacemaker(self.block_tree, self.config)
+
+
+		self.mempool = Mempool()
+
+	def setup(node_id, validators_list): 
 		pass
 
 	def run():
+		self.leader_election = LeaderElection(self.validators_list, self.config.window_size, self.config.exclude_size, self.config.seed, self.ledger, self.pacemaker)	
+
 		while not received(('done',)):
-			if await(received(('proposal_event', 5), from_= b)):
+			if await(received((msgType, 5), from_= b)):
 				pass
-			elif await(received(('vote_event', 5), from_= b)):
-				pass
-			elif await(some(received(('timeout_event', 5), from_= b))):
-				pass
+			# elif await(received(('vote_event', 5), from_= b)):
+			# 	pass
+			# elif await(some(received(('timeout_event', 5), from_= b))):
+			# 	pass
+			elif timeout(TIMEOUT):
+				pacemaker.local_timeout_round()
 
 
 
-	def receive(msg= ('vote_event',n), from_= b):
+
+	def receive(msg= (msgType,n), from_= b):
 		print(n) 
 		output("Received Vote event from Node")
 
-	def receive(msg= ('proposal_event',n), from_= b):
-		print(n+1) 
-		output("Received Proposal event from Node")
+	# def receive(msg= ('proposal_event',n), from_= b):
+	# 	print(n+1) 
+	# 	output("Received Proposal event from Node")
 
-	def receive(msg= ('timeout_event',n), from_= b):
-		print(n+2)
-		output("Received Timeout event from Node")
+	# def receive(msg= ('timeout_event',n), from_= b):
+	# 	print(n+2)
+	# 	output("Received Timeout event from Node")
 
 	def process_certificate_qc(qc)
-		block_tree.process_qc(qc)
+		block_tree.process_qc(qc, self.node_id)
 		leader_election.update_leaders(qc)
 		pacemaker.advance_round(qc.vote_info.round)
 
@@ -83,7 +98,7 @@ class Main(process):
 			process_new_round_event(tc)
 
 	def process_vote_msg(M)
-		qc = block_tree.process_vote(M)
+		qc = block_tree.process_vote(M, self.node_id)
 		if qc not None:
 			process_certificate_qc(qc)
 			process_new_round_event(None)
@@ -100,11 +115,11 @@ class Main(process):
 def main():
 	
 	num_servers = N
-	clients = new(Main, num= num_servers)
+	validators = new(Validator, num= num_servers)
 
 	#Can add new variables to setup if necessary
-	for i, client in enumerate(clients):
-    	setup(client, (i, list(clients)))
+	for i, validator in enumerate(validators):
+    	setup(client, (i, list(validators)))
 
-	start(clients)
+	start(validators)
 
