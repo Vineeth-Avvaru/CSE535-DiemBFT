@@ -2,10 +2,10 @@ class Mempool:
 	def __init__(self):
 		self.transaction_list = []
 
-	def insert(self, transaction_id, node_id):
+	def insert(self, transaction_obj):
 		self.transaction_list.append({
-				transaction_id : transaction_id,
-				node_id : node_id,
+				transaction_id : transaction_obj.transaction_id,
+				node_id : transaction_obj.node_id,
 				state : "NOT_PROCESSED"
 			})
 

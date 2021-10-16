@@ -48,29 +48,38 @@ class Validator(process):
 			# elif await(some(received(('timeout_event', 5), from_= b))):
 			# 	pass
 			elif timeout(TIMEOUT):
-				pacemaker.local_timeout_round()
+				# pacemaker.local_timeout_round()
+				debug("local timeout")
 
 
 
 
-	def receive(msg= (msgType,n), from_= b):
+	def receive(msg= (msgType, obj), from_= b):
 		print(n) 
 		output("Received Vote event from Node")
 
-	# def receive(msg= ('proposal_event',n), from_= b):
-	# 	print(n+1) 
-	# 	output("Received Proposal event from Node")
+		if msgType == "local_timeout":
+			self.local_timeout_round()
 
-	# def receive(msg= ('timeout_event',n), from_= b):
-	# 	print(n+2)
-	# 	output("Received Timeout event from Node")
+		elif msgType == "proposal_event":
+			self.process_proposal_msg(obj)
 
-	def process_certificate_qc(qc)
+		elif msgType == "vote_event":
+			self.process_vote_msg(obj)
+
+		elif msgType == "timeout_event":
+			self.process_timeout_msg(obj)
+
+		elif msgType == "request":
+			self.mempool.insert(obj)
+
+
+	def process_certificate_qc(self, qc):
 		block_tree.process_qc(qc, self.node_id)
 		leader_election.update_leaders(qc)
 		pacemaker.advance_round(qc.vote_info.round)
 
-	def process_proposal_msg(P)
+	def process_proposal_msg(self, P)
 		process_certificate_qc(P.block.qc)
 		process_certificate_qc(P.high_commit_qc)
 
@@ -89,7 +98,7 @@ class Validator(process):
 			# pass
 			#send vote_msg to leader_election.get_leader(current_round + 1)
 
-	def process_timeout_msg(M)
+	def process_timeout_msg(self, M):
 		process_certificate_qc(M.tmo_info.high_qc)
 		process_certificate_qc(M.high_commit_qc)
 		pacemaker.advance_round_tc(M.last_round_tc)
@@ -98,13 +107,13 @@ class Validator(process):
 			pacemaker.advance_round(tc)
 			process_new_round_event(tc)
 
-	def process_vote_msg(M)
+	def process_vote_msg(self, M):
 		qc = block_tree.process_vote(M, self.node_id)
 		if qc not None:
 			process_certificate_qc(qc)
 			process_new_round_event(None)
 
-	def process_new_round_event(last_tc)
+	def process_new_round_event(self, last_tc):
 		if u == leader_election.get_leader(pacemaker.current_round):
 			# Leader code: generate proposal.
 			b = block_tree.generate_block(mempool.get_transactions(),
@@ -112,15 +121,42 @@ class Validator(process):
 			#Todo: broadcast proposal messsage
 			#broadcast ProposalMsghb; last tc; block_tree:high commit qci
 
+	def local_timeout_round(self):
+		pass
+
+lass Validator(process):
+	def __init__():
+		pass
+		
+
+	def setup(node_id, validators_list): 
+		pass
+
+	def run():
+		for i in range(5):
+			obj = {
+				transaction_id : str(self.node_id*5 + i),
+				node_id : self.node_id
+			}
+
+			send(('request', obj), to=validators_list)
+
+
 
 def main():
 	
 	num_servers = N
+	num_clients = N
+
+	clients = new(Client, num = num_clients)
 	validators = new(Validator, num= num_servers)
 
 	#Can add new variables to setup if necessary
 	for i, validator in enumerate(validators):
+    	setup(validator, (i, list(validators)))
+
+    for i, client in enumerate(clients):
     	setup(client, (i, list(validators)))
 
 	start(validators)
-
+	start(clients)
