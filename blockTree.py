@@ -126,5 +126,5 @@ class PendingBlockTree:
         return 
 
     def prune(self,parent_id):
-        self.genesis_block = self.find(parent_id)
+        self.genesis_block = self.find(self.genesis_block,parent_id)
         return
