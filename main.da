@@ -1,6 +1,7 @@
 import sys
 from random import randint
 TIMEOUT = 1
+N = 10
 
 class AnotherMain(process):
 	def setup(a): pass
@@ -22,7 +23,8 @@ class Main(process):
 		pacemaker = Pacemaker()
 		mempool = Mempool()
 
-	def setup(): pass
+	def setup(node_id, list_nodes): 
+		pass
 
 	def run():
 		while not received(('done',)):
@@ -96,10 +98,13 @@ class Main(process):
 
 
 def main():
+	
+	num_servers = N
+	clients = new(Main, num= num_servers)
 
-	a = new(Main, args=(), at='MainNode')
-	b = new(AnotherMain, args=(a,))
+	#Can add new variables to setup if necessary
+	for i, client in enumerate(clients):
+    	setup(client, (i, list(clients)))
 
-	start(a)
-	start(b)
+	start(clients)
 
