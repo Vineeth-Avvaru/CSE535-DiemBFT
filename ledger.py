@@ -91,22 +91,5 @@ class Ledger:
 
         return
 
-def main():
-
-    # block1 = SpeculatedBlock()
-    # file_path = "./ledger_map.txt"
-    # ledger1 = Ledger(file_path=file_path)
-    # ledger1.speculate(0, 1, txns = "transaction_1")
-    # ledger1.speculate(1, 2,txns =  "transaction_2")
-    # ledger1.speculate(1, 3, txns = "transaction_3")
-    # print("*************************")
-    # ledger1.print_map()
-    # ledger1.commit(2, node_id)
-    # print("*************************")
-    # ledger1.print_map()
-
-if __name__ == '__main__':
-    main()
-
 
     

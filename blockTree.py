@@ -1,4 +1,4 @@
-from _typeshed import Self
+# from _typeshed import Self
 import sys
 import ledger
 import collections
