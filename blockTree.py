@@ -14,9 +14,9 @@ class BlockTree:
         self.f = f
         self.ledger = ledger
     
-    def process_qc(self, qc):
+    def process_qc(self, qc, node_id):
         if qc.ledger_commit_info.commit_state_id is not None:
-            self.ledger.commit(qc.vote_info.parent_id)
+            self.ledger.commit(qc.vote_info.parent_id, node_id)
             self.pending_block_tree.prune(qc.vote_info.parent_id)
             if(qc.vote_info.round > self.high_commit_qc.vote_info.round):
                 self.high_commit_qc = qc
@@ -29,8 +29,8 @@ class BlockTree:
         self.pending_block_tree.add(b)
         return 
 
-    def process_vote(self, v):
-        self.process_qc(v.high_commit_qc)
+    def process_vote(self, v, node_id):
+        self.process_qc(v.high_commit_qc, node_id)
         vote_idx = Hashing.hash(v.ledger_commit_info)
         self.pending_votes[vote_idx] =   self.pending_votes[vote_idx].add(v.sign)
         if len(self.pending_votes) >= 2*self.f+1:
