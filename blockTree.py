@@ -120,29 +120,37 @@ class ProposalMsg:
 class PendingBlockTree:
     def __init__(self, genesis_block):
         self.genesis_block = genesis_block
+
     def add(self, b):
         parent_block = self.find(self.genesis_block,b.qc.vote_info.parent_id)
         print("PENDING BLOCK")
         parent_block.childBlocks.append(b)
+        print("ADDED BLOCK")
         return
+
     # Find the block with id
     def find(self, root, id):
-        print("FINDING BLOCK1", root, id)
-        # if id == "genesis_id":
+        print("FINDING BLOCK1", root.id, len(root.childBlocks), id)
+        res = None
         if id == root.id:
             return root
         else:
             # print("********************None Block*****************", root)
+            
             for i in range(0, len(root.childBlocks)):
                 print("FINDING BLOCK2")
                 block = root.childBlocks[i]
-                if block.id == id :
-                    return block
-                else:
-                    root = block
-                    return self.find(root, id)
+                node_found = self.find(block, id)
+                if node_found:
+                    res = node_found
+                # if block.id == id :
+                #     return block
+                # else:
+                #     root = block
+                #     return self.find(root, id)
+            return res
         print("FINDING BLOCK3")
-        return None
+        return res
 
     def prune(self,parent_id):
         print("PRUNING LOCAL BLOCK TREE", parent_id, self.genesis_block)
