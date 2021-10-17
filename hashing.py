@@ -3,7 +3,10 @@ class Hashing:
         pass
 
     def hash(*argv):
+        print("HAASHING1")
         s = ""
         for arg in argv:
-            s += arg + "#"
+            print("HAASHING2")
+            s += str(arg) + "#"
+        print("HAASHING3")
         return s[:-1]

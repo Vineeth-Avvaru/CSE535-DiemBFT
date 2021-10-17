@@ -70,9 +70,13 @@ class Validator(process):
 
 
 	def process_certificate_qc(qc):
+		print("PROCESSCERT1")
 		self.block_tree.process_qc(qc, self.node_id)
+		print("PROCESSCERT2")
 		self.leader_election.update_leaders(qc)
+		print("PROCESSCERT3")
 		self.advance_round_qc(qc)
+		print("PROCESSCERT4")
 
 	def process_proposal_msg(P):
 		process_certificate_qc(P.block.qc)
