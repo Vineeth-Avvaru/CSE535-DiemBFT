@@ -118,8 +118,8 @@ class Validator(process):
 			#print("VERIFY QC SIGNATURE")
 			self.validator_keys[qc.author].verify(qc.sign, encoder=HexEncoder)
 
-			#for sign_info in qc.signatures:
-			#	self.validator_keys[sign_info.node_id].verify(sign_info.signature, encoder=HexEncoder)
+			for sign_info in qc.signatures:
+				self.validator_keys[sign_info.node_id].verify(sign_info.signature, encoder=HexEncoder)
 
 	def verify_tc_signature(timeout_msg):
 		if timeout_msg.tmo_info.high_qc.vote_info.id != "genesis_id":

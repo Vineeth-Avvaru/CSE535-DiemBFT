@@ -37,7 +37,7 @@ class BlockTree:
         self.process_qc(v.high_commit_qc, node_id)
         vote_idx = Hashing.temphash(v.ledger_commit_info)
         # print("PENDING SIGN: ", v.sign.signature, ", in node: ", node_id, ", vote_idx : ", vote_idx)
-        self.pending_votes[vote_idx].add(v.sign.signature)
+        self.pending_votes[vote_idx].add(v.sign)
         # print("PENDING VOTES: ", len(self.pending_votes[vote_idx]))
         #print("Access passed")
         if len(self.pending_votes[vote_idx]) == 2*self.f+1:
