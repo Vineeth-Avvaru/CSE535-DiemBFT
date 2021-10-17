@@ -5,9 +5,10 @@ class SpeculatedBlock(object):
     def __init__(self, prev = None, txns = "", block_id = 0):
         #TODO: fix state_id based on hash function
         if prev is not None:
-            self.state_id = prev.state_id +  "#" +txns
+            print("OPERAND1", prev.state_id, txns)
+            self.state_id = prev.state_id +  "#" +txns['transaction_id']
         else:
-            self.state_id = txns
+            self.state_id = txns['transaction_id']
         self.block_id = block_id
         self.txns = txns
         self.prev = prev
@@ -15,12 +16,17 @@ class SpeculatedBlock(object):
 
     def __str__(self):
         s = "\n"
+        print("OPERAND2")
         s += "BlockID = "+ str(self.block_id) + "\n"
+        print("OPERAND3")
         s += "Txns: "+str(self.txns)+ "\n"
+        print("OPERAND4")
         s += "StateID: "+ str(self.state_id)+ "\n"
         if self.prev is not None:
+            print("OPERAND5")
             s+= "Prev Block ID: " + str(self.prev.block_id)+ "\n"
         if self.next is not None:
+            print("OPERAND6")
             s+= "Next Block ID: " + str(self.next.block_id)+ "\n"
         s+="-----------------------------------------------"
         return s
