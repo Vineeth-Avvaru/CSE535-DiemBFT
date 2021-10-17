@@ -6,8 +6,8 @@ from hashing import Hashing
 
 class BlockTree:
     def __init__(self, high_qc, high_commit_qc, f, ledger, mempool, node_id):
-        self.high_qc=QC(VoteInfo("genesis_id",-1,"genesis_id",-2,"genesis_state"),LedgerCommitInfo(None,""),["genesis"], node_id, None)
-        self.high_commit_qc=QC(VoteInfo("genesis_id",-2,"genesis_id",-3,"genesis_state"),LedgerCommitInfo(None,""),["genesis"], node_id, None)
+        self.high_qc=QC(VoteInfo("genesis_id",-1,"genesis_id",-2,"genesis_state", -1),LedgerCommitInfo(None,""),["genesis"], node_id, None)
+        self.high_commit_qc=QC(VoteInfo("genesis_id",-2,"genesis_id",-3,"genesis_state", -1),LedgerCommitInfo(None,""),["genesis"], node_id, None)
         genesis_block = Block(node_id, 0, ["genesis_txn"], self.high_qc, "genesis_id",[])
         self.pending_block_tree = PendingBlockTree(genesis_block)
         self.pending_votes = collections.defaultdict(set)
@@ -54,12 +54,13 @@ class SignatureInfo:
         self.signature = signature
 
 class VoteInfo:
-    def __init__(self, id, round, parent_id, parent_round, exec_state_id):
+    def __init__(self, id, round, parent_id, parent_round, exec_state_id, tid):
         self.id = id
         self.round = round
         self.parent_id = parent_id
         self.parent_round = parent_round
         self.exec_state_id = exec_state_id
+        self.tid = tid
 
 class LedgerCommitInfo:
     def __init__(self, commit_state_id, vote_info_hash):
@@ -146,6 +147,6 @@ class PendingBlockTree:
     def prune(self, parent_id, node_id):
         self.genesis_block = self.find(self.genesis_block,parent_id)
         if self.genesis_block is None:
-            self.high_qc = QC(VoteInfo("genesis_id",-1,"genesis_id",-2,"genesis_state"),LedgerCommitInfo(None,""),["genesis"], node_id, None)
+            self.high_qc = QC(VoteInfo("genesis_id",-1,"genesis_id",-2,"genesis_state", -1),LedgerCommitInfo(None,""),["genesis"], node_id, None)
             self.genesis_block = Block(node_id, 0, ["genesis_txn"], self.high_qc, "genesis_id", [])
         return

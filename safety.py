@@ -56,7 +56,7 @@ class Safety:
             self.__update_highest_qc_round(qc_round)
             self.__increase_highest_vote_round(b.round)
             # exec_state_id == state_id ?
-            vote_info = VoteInfo(id = b.id, round = b.round, parent_id = b.qc.vote_info.id, parent_round= qc_round, exec_state_id = self.ledger.pending_state(b.id))
+            vote_info = VoteInfo(id = b.id, round = b.round, parent_id = b.qc.vote_info.id, parent_round= qc_round, exec_state_id = self.ledger.pending_state(b.id), tid = b.payload)
             ledger_commit_info = LedgerCommitInfo(commit_state_id = self.__commit_state_id_candidate(b.round, b.qc), vote_info_hash = Hashing.hash(vote_info))
             return VoteMsg(vote_info = vote_info, ledger_commit_info = ledger_commit_info, high_commit_qc = self.block_tree.high_commit_qc, sender= node_id, signature=SignatureInfo(node_id, signature))
         return None
