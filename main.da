@@ -94,14 +94,20 @@ class Validator(process):
 			send(('vote_event', vote_msg), to=l)
 
 	def process_timeout_msg(M):
+		print("TIMEOUT1")
 		process_certificate_qc(M.tmo_info.high_qc)
+		print("TIMEOUT2")
 		process_certificate_qc(M.high_commit_qc)
+		print("TIMEOUT3")
 		self.advance_round_tc(M.last_round_tc)
+		print("TIMEOUT4")
 		tc = self.process_remote_timeout(M)
+		print("TIMEOUT5")
 		if tc is not None:
 			print("TC NOT NONE\n\n\n")
 			self.advance_round_tc(tc)
 			process_new_round_event(tc)
+		print("TIMEOUT6")
 
 	def process_vote_msg(M):
 		qc = self.block_tree.process_vote(M, self.node_id)
@@ -114,11 +120,14 @@ class Validator(process):
 		print("CURRENT NODE ID", self.node_id)
 		print("CURRENT LEADER", self.leader_election.get_leader(self.pacemaker.current_round))
 		if self.node_id == self.leader_election.get_leader(self.pacemaker.current_round):
-			print("i am leader")
+			print("i am leader1")
 			# Leader code: generate proposal.
 			b = self.block_tree.generate_block(self.mempool.get_transactions(), self.pacemaker.current_round)
+			print("i am leader2")
 			#broadcast ProposalMsghb; last tc; block_tree:high commit qci
 			send(('proposal_event', ProposalMsg(b, last_tc, self.block_tree.high_commit_qc)), to=self.validators_list)
+			print("i am leader3")
+		print("i am leader4")
 
 	def local_timeout_round():
 		tmo_info = self.safety.make_timeout(self.pacemaker.current_round, self.block_tree.high_qc, self.pacemaker.last_round_tc, self.node_id)

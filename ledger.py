@@ -74,6 +74,7 @@ class Ledger:
         if block.prev is not None:
             self.commit(block.prev.block_id, node_id)
         try:
+            print("LEDGER1")
             ledger_file = open(self.ledger_file_path + str(node_id) + ".txt", "a")
         except OSError:
             print("Error in reading file: ", self.ledger_file_path + str(node_id) + ".txt")

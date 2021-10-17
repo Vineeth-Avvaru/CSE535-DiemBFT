@@ -14,7 +14,7 @@ class Mempool:
 	def update_state(self, transaction_id, state):
 		for t in self.transaction_list:
 			if t['transaction_id'] == transaction_id:
-				t.state = state
+				t['state'] = state
 				self.pending_count -= 1
 				return True
 		return False
@@ -23,7 +23,7 @@ class Mempool:
 		transaction_selected = None
 
 		for t in self.transaction_list:
-			if t.state == "NOT_PROCESSED":
+			if t['state'] == "NOT_PROCESSED":
 				transaction_selected = t
 				return transaction_selected
 
