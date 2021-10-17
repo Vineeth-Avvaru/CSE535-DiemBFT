@@ -88,7 +88,7 @@ class TimeoutInfo:
         self.round = round
         self.high_qc = high_qc
         self.sender = sender
-        # signature <- sign(round, high_qc.round)
+        self.signature = sender
 
 class TC:
     def __init__(self, round, tmo_high_qc_rounds, tmo_signatures):
