@@ -18,7 +18,7 @@ class BlockTree:
     def process_qc(self, qc, node_id):
         if qc.ledger_commit_info.commit_state_id is not None:
             self.ledger.commit(qc.vote_info.parent_id, node_id)
-            self.mempool.update_state(qc.vote_info.id, "COMMIT")
+            self.mempool.update_state(qc.vote_info.id.split('#')[2], "COMMIT")
             self.pending_block_tree.prune(qc.vote_info.id, node_id)
             if(qc.vote_info.round > self.high_commit_qc.vote_info.round):
                 self.high_commit_qc = qc
@@ -34,7 +34,7 @@ class BlockTree:
 
     def process_vote(self, v, node_id):
         self.process_qc(v.high_commit_qc, node_id)
-        vote_idx = Hashing.hash(v.ledger_commit_info)
+        vote_idx = v.ledger_commit_info
         self.pending_votes[vote_idx].add(v.sign)
         if len(self.pending_votes) >= 2*self.f+1:
             return QC(vote_info= v.vote_info,ledger_commit_info = v.ledger_commit_info, signatures= self.pending_votes[vote_idx], author= node_id)
@@ -43,7 +43,7 @@ class BlockTree:
     def generate_block(self, txns, current_round):
         # Have to set author
         block = Block(author=1 , round = current_round, payload = txns, qc = self.high_qc, childBlocks=[])
-        block.id = Hashing.hash(block.author, block.round, block.payload["transaction_id"], self.high_qc.vote_info.id, self.high_qc.signatures)
+        block.id = Hashing.hash(block.author, block.round, block.payload, self.high_qc.vote_info.id, self.high_qc.signatures)
         return block
 
 class VoteInfo:

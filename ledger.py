@@ -5,9 +5,9 @@ class SpeculatedBlock(object):
     def __init__(self, prev = None, txns = "", block_id = 0):
         #TODO: fix state_id based on hash function
         if prev is not None:
-            self.state_id = prev.state_id +  "#" +txns['transaction_id']
+            self.state_id = prev.state_id +  "#" +txns
         else:
-            self.state_id = txns['transaction_id']
+            self.state_id = txns
         self.block_id = block_id
         self.txns = txns
         self.prev = prev
@@ -16,7 +16,7 @@ class SpeculatedBlock(object):
     def __str__(self):
         s = "\n"
         s += "BlockID = "+ str(self.block_id) + "\n"
-        s += "Txns: "+str(self.txns['transaction_id'])+ "\n"
+        s += "Txns: "+str(self.txns)+ "\n"
         s += "StateID: "+ str(self.state_id)+ "\n"
         if self.prev is not None:
             s+= "Prev Block ID: " + str(self.prev.block_id)+ "\n"
@@ -44,8 +44,11 @@ class Ledger:
             # if not commited_state_block:
                 # return
             print("No prev block")
+            # print(block_id, txns)
             newBlock = SpeculatedBlock(block_id = block_id, txns = txns)
+            # print("I AM HERE1")
             self.pending_block_map[block_id] = newBlock
+            # print("I AM HERE2")
 
         else:
             prev_block = self.pending_block_map[prev_block_id]
@@ -69,6 +72,7 @@ class Ledger:
         if block_id not in self.pending_block_map:
             return
         block = self.pending_block_map[block_id]
+        # print(block)
         if block.prev is not None:
             # print("COMMIT1")
             self.commit(block.prev.block_id, node_id)

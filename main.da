@@ -39,26 +39,28 @@ class Validator(process):
 
 		self.pacemaker = Pacemaker(self.block_tree, self.config)
 		self.leader_election = LeaderElection(self.validators_list, self.config['window_size'], self.config['exclude_size'], self.config['seed'], self.ledger, self.pacemaker)	
+		self.run_done = False
 
-		while not received(('done',)):
-			# if await(received((msgType, 5))):
-			print("round restarted")
+		while not self.run_done or len(self.mempool.transaction_list) > 0:
+			
+			# print(self.run_done, len(self.mempool.transaction_list))
+			# print("round restarted")
 			self.round_done = False
-			if await(self.round_done):
+			if await(self.round_done == True):
 				pass
 			elif timeout(TIMEOUT):
-				if self.mempool.pending_count > 0:
+				if len(self.mempool.transaction_list) > 0:
 					self.local_timeout_round()
 
 	def receive(msg= (msgType, obj)):
 		# output(msgType, obj)
 
 		if msgType == "proposal_event":
-			print("PROPASAL TIMEOUT MESSAGE", obj)
+			print("PROPASAL TIMEOUT MESSAGE", obj.block.author)
 			self.process_proposal_msg(obj)
 
 		elif msgType == "vote_event":
-			print("VOTE TIMEOUT MESSAGE", obj)
+			print("VOTE TIMEOUT MESSAGE", obj.sender)
 			self.process_vote_msg(obj)
 
 		elif msgType == "timeout_event":
@@ -66,7 +68,13 @@ class Validator(process):
 			self.process_timeout_msg(obj)
 
 		elif msgType == "request":
+			print("received request command")
 			self.mempool.insert(obj)
+
+		elif msgType == 'done':
+			print("DONE MESSAGE RECEIVED")
+			self.round_done = True
+			self.run_done = True
 
 
 	def process_certificate_qc(qc):
@@ -107,7 +115,7 @@ class Validator(process):
 			process_new_round_event(None)
 
 	def process_new_round_event(last_tc):
-		if self.node_id == self.leader_election.get_leader(self.pacemaker.current_round):
+		if len(self.mempool.transaction_list) > 0 and self.node_id == self.leader_election.get_leader(self.pacemaker.current_round):
 			# Leader code: generate proposal.
 			b = self.block_tree.generate_block(self.mempool.get_transactions(), self.pacemaker.current_round)
 			#broadcast ProposalMsg; last tc; block_tree:high commit qci
@@ -120,8 +128,9 @@ class Validator(process):
 		send(('timeout_event', TimeoutMsg(tmo_info, self.pacemaker.last_round_tc, self.block_tree.high_commit_qc)), to=self.validators_list)
 
 	def start_timer(new_round):
-		self.pacemaker.current_round = new_round
 		self.round_done = True
+		self.pacemaker.current_round = new_round
+
 
 	def advance_round_tc(tc):
 		if tc is None or tc.round < self.pacemaker.current_round:
@@ -157,7 +166,9 @@ class Validator(process):
         # print("pm 3")
 		
 		if len(tmo_senders) == self.pacemaker.config['f'] + 1:
+			self.round_done = True
 			self.local_timeout_round()
+
 			
 		if len(tmo_senders) == 2*self.pacemaker.config['f'] + 1:
 			return TC(
@@ -184,6 +195,7 @@ class Client(process):
 			}
 
 			send(('request', obj), to=self.validators_list)
+		send(('done', {}), to=self.validators_list)
 		pass
 
 
