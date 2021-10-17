@@ -115,7 +115,7 @@ class Validator(process):
 			send(('proposal_event', ProposalMsg(b, last_tc, self.block_tree.high_commit_qc)), to=self.validators_list)
 
 	def local_timeout_round():
-		tmo_info = self.safety.make_timeout(self.pacemaker.current_round, self.block_tree.high_qc, None, self.node_id)
+		tmo_info = self.safety.make_timeout(self.pacemaker.current_round, self.block_tree.high_qc, self.pacemaker.last_round_tc, self.node_id)
 
 
 		send(('timeout_event', TimeoutMsg(tmo_info, self.pacemaker.last_round_tc, self.block_tree.high_commit_qc)), to=self.validators_list)
