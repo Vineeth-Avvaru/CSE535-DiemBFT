@@ -56,9 +56,6 @@ class Validator(process):
 	def receive(msg= (msgType, obj)):
 		output(msgType, obj)
 
-		# if msgType == "local_timeout":
-		# 	self.local_timeout_round()
-
 		if msgType == "proposal_event":
 			self.process_proposal_msg(obj)
 
@@ -66,6 +63,7 @@ class Validator(process):
 			self.process_vote_msg(obj)
 
 		elif msgType == "timeout_event":
+			print("RECEIVE TIMEOUT MESSAGE", obj.tmo_info.round, obj.tmo_info.high_qc.vote_info, obj.last_round_tc, obj.high_commit_tc.vote_info)
 			self.process_timeout_msg(obj)
 
 		elif msgType == "request":
@@ -73,13 +71,13 @@ class Validator(process):
 
 
 	def process_certificate_qc(qc):
-		print("check 1")
+		print("lala1")
 		self.block_tree.process_qc(qc, self.node_id)
-		print("check 2")
+		print("lala2")
 		self.leader_election.update_leaders(qc)
-		print("check 3")
-		self.advance_round_qc(qc.vote_info.round)
-		print("check 4")
+		print("lala3")
+		self.advance_round_qc(qc)
+		print("lala4")
 
 	def process_proposal_msg(P):
 		process_certificate_qc(P.block.qc)
@@ -101,15 +99,21 @@ class Validator(process):
 			send(('vote_event', vote_msg), to=l)
 
 	def process_timeout_msg(M):
+		print("check1")
 		process_certificate_qc(M.tmo_info.high_qc)
+		print("check2")
 		print("prc high commit qc")
 		process_certificate_qc(M.high_commit_qc)
+		print("check3")
 		self.advance_round_tc(M.last_round_tc)
+		print("check4")
 		tc = self.pacemaker.process_remote_timeout(M)
+		print("check5")
 		if tc is not None:
 			self.advance_round_tc(tc)
 			self.round_done = True
 			process_new_round_event(tc)
+		print("check6")
 
 	def process_vote_msg(M):
 		qc = self.block_tree.process_vote(M, self.node_id)
