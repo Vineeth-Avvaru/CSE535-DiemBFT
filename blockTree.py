@@ -6,8 +6,8 @@ from hashing import Hashing
 
 class BlockTree:
     def __init__(self, high_qc, high_commit_qc, f, ledger, mempool, node_id):
-        self.high_qc=QC(VoteInfo("genesis_id",-1,"genesis_id",-2,"genesis_state"),LedgerCommitInfo(None,""),["genesis"], node_id)
-        self.high_commit_qc=QC(VoteInfo("genesis_id",-2,"genesis_id",-3,"genesis_state"),LedgerCommitInfo(None,""),["genesis"], node_id)
+        self.high_qc=QC(VoteInfo("genesis_id",-1,"genesis_id",-2,"genesis_state"),LedgerCommitInfo(None,""),["genesis"], node_id, None)
+        self.high_commit_qc=QC(VoteInfo("genesis_id",-2,"genesis_id",-3,"genesis_state"),LedgerCommitInfo(None,""),["genesis"], node_id, None)
         genesis_block = Block(node_id, 0, ["genesis_txn"], self.high_qc, "genesis_id",[])
         self.pending_block_tree = PendingBlockTree(genesis_block)
         self.pending_votes = collections.defaultdict(set)
@@ -32,12 +32,14 @@ class BlockTree:
         self.pending_block_tree.add(b)
         return 
 
-    def process_vote(self, v, node_id):
+    def process_vote(self, v, node_id, signature):
+        print("in process vote")
         self.process_qc(v.high_commit_qc, node_id)
         vote_idx = v.ledger_commit_info
         self.pending_votes[vote_idx].add(v.sign)
+        print("Access passed")
         if len(self.pending_votes) >= 2*self.f+1:
-            return QC(vote_info= v.vote_info,ledger_commit_info = v.ledger_commit_info, signatures= self.pending_votes[vote_idx], author= node_id)
+            return QC(vote_info= v.vote_info,ledger_commit_info = v.ledger_commit_info, signatures= self.pending_votes[vote_idx], author= node_id, signature= signature)
         return None
 
     def generate_block(self, txns, current_round):
@@ -45,6 +47,11 @@ class BlockTree:
         block = Block(author=1 , round = current_round, payload = txns, qc = self.high_qc, childBlocks=[])
         block.id = Hashing.hash(block.author, block.round, block.payload, self.high_qc.vote_info.id, self.high_qc.signatures)
         return block
+
+class SignatureInfo:
+    def __init__(self, node_id, signature):
+        self.node_id = node_id
+        self.signature = signature
 
 class VoteInfo:
     def __init__(self, id, round, parent_id, parent_round, exec_state_id):
@@ -60,20 +67,20 @@ class LedgerCommitInfo:
         self.vote_info_hash = vote_info_hash
         
 class VoteMsg:
-    def __init__(self, vote_info, ledger_commit_info, high_commit_qc, sender):
+    def __init__(self, vote_info, ledger_commit_info, high_commit_qc, sender, signature):
         self.vote_info = vote_info
         self.ledger_commit_info = ledger_commit_info
         self.high_commit_qc = high_commit_qc
         self.sender = sender
-        self.sign = None
+        self.sign = signature
 
 class QC:
-    def __init__(self, vote_info, ledger_commit_info, signatures, author):
+    def __init__(self, vote_info, ledger_commit_info, signatures, author, signature):
         self.vote_info = vote_info
         self.ledger_commit_info = ledger_commit_info
         self.signatures = signatures
         self.author = author
-        self.sign = None
+        self.sign = signature
 
 class Block:
     def __init__(self, author, round, payload, qc, id = None, childBlocks = list()):
@@ -85,11 +92,11 @@ class Block:
         self.childBlocks = childBlocks
 
 class TimeoutInfo:
-    def __init__(self, round, high_qc, sender):
+    def __init__(self, round, high_qc, sender, signature):
         self.round = round
         self.high_qc = high_qc
         self.sender = sender
-        self.signature = sender
+        self.signature = signature
 
 class TC:
     def __init__(self, round, tmo_high_qc_rounds, tmo_signatures):
@@ -139,6 +146,6 @@ class PendingBlockTree:
     def prune(self, parent_id, node_id):
         self.genesis_block = self.find(self.genesis_block,parent_id)
         if self.genesis_block is None:
-            self.high_qc = QC(VoteInfo("genesis_id",-1,"genesis_id",-2,"genesis_state"),LedgerCommitInfo(None,""),["genesis"], node_id)
+            self.high_qc = QC(VoteInfo("genesis_id",-1,"genesis_id",-2,"genesis_state"),LedgerCommitInfo(None,""),["genesis"], node_id, None)
             self.genesis_block = Block(node_id, 0, ["genesis_txn"], self.high_qc, "genesis_id", [])
         return

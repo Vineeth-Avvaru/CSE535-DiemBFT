@@ -7,6 +7,8 @@ from mempool import Mempool
 from ledger import Ledger
 from safety import Safety
 from hashing import Hashing
+from nacl.encoding import HexEncoder
+from nacl.signing import SigningKey, VerifyKey
 TIMEOUT = 3
 N = 4
 
@@ -25,9 +27,19 @@ class Validator(process):
 		self.node_id = node_id
 		self.validators_list = validators_list
 
+		self.client_keys = {}
+		self.validator_keys = {}
+
+		self.signing_key = SigningKey.generate()
+		self.verify_key = self.signing_key.verify_key
+		self.verify_key_hex = self.verify_key.encode(encoder=HexEncoder)
+		self.signature = self.signing_key.sign(b'VALIDATOR', encoder=HexEncoder)
+
+
 	def run():
 		self.config = init_config()
 		self.file_path = "./ledger_map"
+		
 
 		self.ledger = Ledger(file_path)
 		self.mempool = Mempool()
@@ -41,6 +53,9 @@ class Validator(process):
 		self.leader_election = LeaderElection(self.validators_list, self.config['window_size'], self.config['exclude_size'], self.config['seed'], self.ledger, self.pacemaker)	
 		self.run_done = False
 
+
+		send(('validator_key', self.verify_key_hex, self.node_id, None), to=self.validators_list)
+
 		while not self.run_done or len(self.mempool.transaction_list) > 0:
 			
 			# print(self.run_done, len(self.mempool.transaction_list))
@@ -52,35 +67,74 @@ class Validator(process):
 				if len(self.mempool.transaction_list) > 0:
 					self.local_timeout_round()
 
-	def receive(msg= (msgType, obj)):
+	def receive(msg= (msgType, obj, sender_id, signature)):
 		# output(msgType, obj)
 
 		if msgType == "proposal_event":
 			print("PROPASAL TIMEOUT MESSAGE", obj.block.author)
+			self.validator_keys[sender_id].verify(signature, encoder=HexEncoder)
+			print("VERIFIED PROPASAL MESSAGE")
 			self.process_proposal_msg(obj)
 
 		elif msgType == "vote_event":
 			print("VOTE TIMEOUT MESSAGE", obj.sender)
+			self.validator_keys[sender_id].verify(signature, encoder=HexEncoder)
+			print("VERIFIED VOTE MESSAGE")
 			self.process_vote_msg(obj)
 
 		elif msgType == "timeout_event":
 			# print("RECEIVE TIMEOUT MESSAGE", obj.tmo_info.round, obj.tmo_info.high_qc.vote_info, obj.last_round_tc, obj.high_commit_qc.vote_info)
+			self.validator_keys[sender_id].verify(signature, encoder=HexEncoder)
+			print("VERIFIED TIMEOUT MESSAGE")
 			self.process_timeout_msg(obj)
 
 		elif msgType == "request":
 			print("received request command")
+			self.client_keys[sender_id].verify(signature, encoder=HexEncoder)
+			
 			self.mempool.insert(obj)
+			print("CLIENT REQUEST VERIFIED AND INSERTED")
 
 		elif msgType == 'done':
 			print("DONE MESSAGE RECEIVED")
 			self.round_done = True
 			self.run_done = True
 
+		elif msgType == 'client_key':
+			verify_key = VerifyKey(obj, encoder=HexEncoder)
+			self.client_keys[sender_id] = verify_key
+			print("GOT CLIENT KEY: ", sender_id)
+
+		elif msgType == 'validator_key':
+			verify_key = VerifyKey(obj, encoder=HexEncoder)
+			self.validator_keys[sender_id] = verify_key
+			print("GOT VALIDATOR KEY: ", sender_id)
+
+	def verify_qc_signature(qc):
+		if qc.vote_info.id != "genesis_id":
+			print("VERIFY QC SIGNATURE")
+			self.validator_keys[qc.author].verify(qc.sign, encoder=HexEncoder)
+
+			for sign_info in qc.signatures:
+				self.validator_keys[sign_info.node_id].verify(sign_info.signature, encoder=HexEncoder)
+
+	def verify_tc_signature(timeout_msg):
+		if timeout_msg.tmo_info.high_qc.vote_info.id != "genesis_id":
+			print("VERIFY TIMEOUT_MSG SIGNATURE")
+			self.validator_keys[timeout_msg.tmo_info.sender].verify(timeout_msg.tmo_info.signature, encoder=HexEncoder)
+
+			if timeout_msg.last_round_tc is not None:
+				for sign_info in timeout_msg.last_round_tc.tmo_signatures:
+					self.validator_keys[sign_info.node_id].verify(sign_info.signature, encoder=HexEncoder)
 
 	def process_certificate_qc(qc):
+		verify_qc_signature(qc)
 		self.block_tree.process_qc(qc, self.node_id)
+		#print("block tree process qc passed")
 		self.leader_election.update_leaders(qc)
+		#print("process qc update leaders passed")
 		self.advance_round_qc(qc)
+		#print("process qc advance round passed")
 
 	def process_proposal_msg(P):
 		process_certificate_qc(P.block.qc)
@@ -93,13 +147,16 @@ class Validator(process):
 			return
 
 		self.block_tree.execute_and_insert(P.block) # Adds a new speculative state to the Ledger
-		vote_msg = self.safety.make_vote(P, P.block, P.last_round_tc, self.node_id)
+
+		#signature = self.signing_key.sign(b'VALIDATOR', encoder=HexEncoder)
+		vote_msg = self.safety.make_vote(P, P.block, P.last_round_tc, self.node_id, self.signature)
 		if vote_msg is not None:
 			l = self.leader_election.get_leader(round + 1)
 			#send vote_msg to leader_election.get_leader(current_round + 1)
-			send(('vote_event', vote_msg), to=self.validators_list[l])
+			send(('vote_event', vote_msg, self.node_id, self.signature), to=self.validators_list[l])
 
 	def process_timeout_msg(M):
+		verify_tc_signature(M)
 		process_certificate_qc(M.tmo_info.high_qc)
 		process_certificate_qc(M.high_commit_qc)
 		self.advance_round_tc(M.last_round_tc)
@@ -109,9 +166,12 @@ class Validator(process):
 			process_new_round_event(tc)
 
 	def process_vote_msg(M):
-		qc = self.block_tree.process_vote(M, self.node_id)
+		qc = self.block_tree.process_vote(M, self.node_id, self.signature)
+		print("Process vote passed")
 		if qc is not None:
+			print("in qc check pass")
 			process_certificate_qc(qc)
+			print("Process cert qc passed")
 			process_new_round_event(None)
 
 	def process_new_round_event(last_tc):
@@ -119,13 +179,14 @@ class Validator(process):
 			# Leader code: generate proposal.
 			b = self.block_tree.generate_block(self.mempool.get_transactions(), self.pacemaker.current_round)
 			#broadcast ProposalMsg; last tc; block_tree:high commit qci
-			send(('proposal_event', ProposalMsg(b, last_tc, self.block_tree.high_commit_qc, self.node_id)), to=self.validators_list)
+			#signature = self.signing_key.sign(b'VALIDATOR', encoder=HexEncoder)
+			send(('proposal_event', ProposalMsg(b, last_tc, self.block_tree.high_commit_qc, self.node_id), self.node_id, self.signature), to=self.validators_list)
 
 	def local_timeout_round():
-		tmo_info = self.safety.make_timeout(self.pacemaker.current_round, self.block_tree.high_qc, self.pacemaker.last_round_tc, self.node_id)
+		tmo_info = self.safety.make_timeout(self.pacemaker.current_round, self.block_tree.high_qc, self.pacemaker.last_round_tc, self.node_id, self.signature)
 
 
-		send(('timeout_event', TimeoutMsg(tmo_info, self.pacemaker.last_round_tc, self.block_tree.high_commit_qc)), to=self.validators_list)
+		send(('timeout_event', TimeoutMsg(tmo_info, self.pacemaker.last_round_tc, self.block_tree.high_commit_qc), self.node_id, self.signature), to=self.validators_list)
 
 	def start_timer(new_round):
 		self.round_done = True
@@ -176,11 +237,10 @@ class Validator(process):
 			return TC(
 				timeout_info.round,
 				[t.high_qc.vote_info.round for t in self.pacemaker.pending_timeouts[timeout_info.round]],
-				[t.signature for t in self.pacemaker.pending_timeouts[timeout_info.round]]
+				[SignatureInfo(t.sender, t.signature) for t in self.pacemaker.pending_timeouts[timeout_info.round]]
 			)
 		
 		return None
-
 		
 
 class Client(process):
@@ -189,15 +249,22 @@ class Client(process):
 		self.node_id = node_id
 		self.validators_list = validators_list
 
+		self.signing_key = SigningKey.generate()
+		self.verify_key = self.signing_key.verify_key
+		self.verify_key_hex = self.verify_key.encode(encoder=HexEncoder)
+
 	def run():
+		send(('client_key', self.verify_key_hex, self.node_id, None), to=self.validators_list)
+		#bytes(str(self.node_id),'utf-8')
+		signed_hex = self.signing_key.sign(b'Client', encoder=HexEncoder)
 		for i in range(2):
 			obj = {
 				'transaction_id' : str(self.node_id*2 + i),
 				'node_id' : self.node_id
 			}
 
-			send(('request', obj), to=self.validators_list)
-		send(('done', {}), to=self.validators_list)
+			send(('request', obj, self.node_id, signed_hex), to=self.validators_list)
+		send(('done', {}, self.node_id, None), to=self.validators_list)
 		pass
 
 
