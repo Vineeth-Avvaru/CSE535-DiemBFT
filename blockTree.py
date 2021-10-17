@@ -27,7 +27,7 @@ class BlockTree:
         return 
 
     def execute_and_insert(self, b):
-        self.ledger.speculate(b.qc.block_id, b.id, b.payload)
+        self.ledger.speculate(b.qc.vote_info.id, b.id, b.payload)
         self.mempool.update_state(b.payload, "PENDING")
         self.pending_block_tree.add(b)
         return 
