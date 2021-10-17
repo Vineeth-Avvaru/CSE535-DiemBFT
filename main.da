@@ -16,6 +16,7 @@ N = 4
 
 
 def init_config():
+	LogStuff.log_to_file("Initializing Config file")
 	config = {
 		'window_size': 1,
 		'exclude_size': 1,
@@ -48,7 +49,7 @@ class Validator(process):
 		self.mempool = Mempool()
 		self.block_tree = BlockTree(0, 0, 0, self.ledger, self.mempool, self.node_id)
 		# self.hashing = Hashing()
-		self.logging = LogStuff()
+		# self.logging = LogStuff()
 
 		self.safety = Safety("", [], self.block_tree, self.ledger)
 		
@@ -79,12 +80,14 @@ class Validator(process):
 			#print("PROPASAL TIMEOUT MESSAGE", obj.block.author)
 			self.validator_keys[sender_id].verify(signature, encoder=HexEncoder)
 			#print("VERIFIED PROPASAL MESSAGE")
+			# LogStuff.log_to_file("VERIFIED PROPASAL MESSAGE")
 			self.process_proposal_msg(obj)
 
 		elif msgType == "vote_event":
 			#print("VOTE from : ", sender_id, ", to: ", self.node_id)
 			self.validator_keys[sender_id].verify(signature, encoder=HexEncoder)
 			print("VERIFIED VOTE MESSAGE")
+			LogStuff.log_to_file("VERIFIED VOTE MESSAGE")
 			self.process_vote_msg(obj)
 
 		elif msgType == "timeout_event":
@@ -92,6 +95,7 @@ class Validator(process):
 			# #print("RECEIVE TIMEOUT MESSAGE", obj.tmo_info.round, obj.tmo_info.high_qc.vote_info, obj.last_round_tc, obj.high_commit_qc.vote_info)
 			self.validator_keys[sender_id].verify(signature, encoder=HexEncoder)
 			#print("VERIFIED TIMEOUT MESSAGE")
+			# LogStuff.log_to_file("VERIFIED TIMEOUT MESSAGE")
 			self.process_timeout_msg(obj)
 
 		elif msgType == "request":
@@ -186,6 +190,7 @@ class Validator(process):
 			b = self.block_tree.generate_block(self.mempool.get_transactions(), self.pacemaker.current_round)
 			#if self.node_id == 0:
 			print("get_transactions: node_id :", self.node_id, "tid : ", b.payload, ", round : ", self.pacemaker.current_round)
+			LogStuff.log_to_file_node("PROCESSING NEW ROUND EVENT",self.node_id)
 			#broadcast ProposalMsg; last tc; block_tree:high commit qci
 			#signature = self.signing_key.sign(b'VALIDATOR', encoder=HexEncoder)
 			send(('proposal_event', ProposalMsg(b, last_tc, self.block_tree.high_commit_qc, self.node_id), self.node_id, self.signature), to=self.validators_list)
@@ -243,6 +248,7 @@ class Validator(process):
 		#print("TMO SENDERS: ", len(tmo_senders), 2*self.pacemaker.config['f'] + 1, " , Node :", self.node_id)
 		if len(tmo_senders) == 2*self.pacemaker.config['f'] + 1:
 			# #print("generating TC")
+			# LogStuff.log_to_file_param("Getting TC for round", time)
 			return TC(
 				timeout_info.round,
 				[t.high_qc.vote_info.round for t in self.pacemaker.pending_timeouts[timeout_info.round]],
@@ -286,10 +292,12 @@ def main():
 	clients = new(Client, num = num_clients)
 	validators = new(Validator, num= num_servers)
 	#Can add new variables to setup if necessary
+	LogStuff.log_to_file("Setting up validators")
 	for i, validator in enumerate(validators):
 		setup(validator, args=(i, list(validators)))
 
 	for i, client in enumerate(clients):
+		LogStuff.log_to_file("Setting up client"+ str(i))
 		setup(client, args=(i, list(validators)))
 	start(validators)
 	start(clients)

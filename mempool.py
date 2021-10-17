@@ -1,5 +1,6 @@
 from hashing import Hashing
 from collections import deque
+from logging_file import LogStuff
 
 class Mempool:
 	def __init__(self):
@@ -13,6 +14,7 @@ class Mempool:
 		# 		'node_id' : transaction_obj['node_id'],
 		# 		'state' : "NOT_PROCESSED"
 		# 	})
+		# LogStuff.log_to_file("**************Inserting to mempool**********", transaction_obj['node_id'])
 		self.transaction_list.append(transaction_obj['transaction_id'])
 		# self.pending_count+=1
 
@@ -47,4 +49,5 @@ class Mempool:
 
 		# return transaction_selected
 		# #print("trying to pop from mempool1")
+		# LogStuff.log_to_file("**************Inserting to mempool**********", transaction_obj['node_id'])
 		return self.transaction_list.popleft()

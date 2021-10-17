@@ -17,6 +17,7 @@ class BlockTree:
         self.mempool = mempool
     
     def process_qc(self, qc, node_id):
+        # LogStuff.log_to_file("***********Processing QC***************", node_id)
         if qc.ledger_commit_info.commit_state_id is not None:
             self.ledger.commit(qc.vote_info.parent_id, node_id)
             self.mempool.update_state(qc.vote_info.id.split('#')[2], "COMMIT")
@@ -34,7 +35,7 @@ class BlockTree:
         return 
 
     def process_vote(self, v, node_id, signature):
-        LogStuff.log_to_file("***********Processing Vote***************", node_id)
+        LogStuff.log_to_file_node("***********Processing Vote***************", node_id)
         #print("in process vote")
         self.process_qc(v.high_commit_qc, node_id)
         vote_idx = Hashing.temphash(v.ledger_commit_info)

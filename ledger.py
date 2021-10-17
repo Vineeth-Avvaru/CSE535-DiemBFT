@@ -1,5 +1,6 @@
 import sys
 import collections
+from logging_file import LogStuff
 
 class SpeculatedBlock(object):
     def __init__(self, prev = None, txns = "", block_id = 0):
@@ -83,6 +84,7 @@ class Ledger:
             #print("Error in reading file: ", self.ledger_file_path + str(node_id) + ".txt")
             #print(OSError)
             return
+        LogStuff.log_to_file_param("Comitting Block to ledger with BlockID", block_id)
         ledger_file.write(str(block))
         del self.pending_block_map[block_id]
         return

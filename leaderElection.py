@@ -1,5 +1,6 @@
 from ledger import Ledger
 import random
+from logging_file import LogStuff
 
 class LeaderElection:
     def __init__(self, validators, window_size, exclude_size, seed, ledger, pacemaker):
@@ -12,6 +13,8 @@ class LeaderElection:
         self.pacemaker = pacemaker
 
     def elect_reputation_leader(self, qc):
+        # LogStuff.log_to_file("********Electing Leader********")
+        # print("*******************Electing Leaders*****************")
         active_validators = set()
         last_authors = set()
         current_qc = qc
@@ -33,6 +36,8 @@ class LeaderElection:
         return random.choice(updated_validators)
 
     def update_leaders(self, qc):
+        # print("*******************Updating Leaders*****************")
+        # LogStuff.log_to_file("********Updating Leader********")
         extended_round = qc.vote_info.round
         qc_round = qc.vote_info.round
         current_round = self.pacemaker.current_round
