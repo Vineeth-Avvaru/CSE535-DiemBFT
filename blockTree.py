@@ -35,7 +35,7 @@ class BlockTree:
         return 
 
     def process_vote(self, v, node_id, signature):
-        LogStuff.log_to_file("***********Processing Vote***************", node_id)
+        LogStuff.log_to_file_node("***********Processing Vote***************", node_id)
         #print("in process vote")
         self.process_qc(v.high_commit_qc, node_id)
         vote_idx = Hashing.temphash(v.ledger_commit_info)
