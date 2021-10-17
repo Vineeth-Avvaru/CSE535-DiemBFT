@@ -1,4 +1,4 @@
-#from blockTree import BlockTree, TC
+from blockTree import BlockTree, TC
 
 class Pacemaker:
     def __init__(self, block_tree, config):
@@ -30,18 +30,27 @@ class Pacemaker:
         if timeout_info.round < self.current_round:
             return None
 
-        tmo_senders = [t.sender for t in self.pending_timeouts[timeout_info.round]]
+        print("pm 1")
+        if timeout_info.round not in self.pending_timeouts.keys():
+            self.pending_timeouts[timeout_info.round] = [timeout_info]
+            
+        else:
+            print("pm 11")
+            tmo_senders = [t.sender for t in self.pending_timeouts[timeout_info.round] if t is not None]
 
-        if timeout_info.sender not in tmo_senders:
-            self.pending_timeouts[timeout_info.round].append(timeout_info)
+            if timeout_info.sender not in tmo_senders:
+                self.pending_timeouts[timeout_info.round].append(timeout_info)
+        print("pm 2")
 
-        tmo_senders = [t.sender for t in self.pending_timeouts[timeout_info.round]]
+        tmo_senders = [t.sender for t in self.pending_timeouts[timeout_info.round] if t is not None]
 
-        if len(tmo_senders) == self.config.f + 1:
+        print("pm 3")
+
+        if len(tmo_senders) == self.config['f'] + 1:
             # stop_timer(self.current_round)
             self.local_timeout_round()
 
-        if len(tmo_senders) == 2*self.config.f + 1:
+        if len(tmo_senders) == 2*self.config['f'] + 1:
             return TC(
                 timeout_info.round,
                 [t.high_qc.round for t in self.pending_timeouts[timeout_info.round]],

@@ -14,7 +14,8 @@ def init_config():
 	config = {
 		'window_size': 1,
 		'exclude_size': 1,
-		'seed':"grabage"
+		'seed':"grabage",
+		'f' : 0
 	}
 	return config
 
@@ -92,7 +93,7 @@ class Validator(process):
 			return
 
 		self.block_tree.execute_and_insert(P) # Adds a new speculative state to the Ledger
-		vote_msg = self.safety.make_vote(P.block, P.last_round_tc)
+		vote_msg = self.safety.make_vote(P.block, P.last_round_tc, self.node_id)
 		if vote_msg is not None:
 			l = self.leader_election.get_leader(round + 1)
 			#send vote_msg to leader_election.get_leader(current_round + 1)
@@ -131,7 +132,7 @@ class Validator(process):
 
 	def local_timeout_round():
 		print("before make timeout")
-		tmo_info = self.safety.make_timeout(self.pacemaker.current_round, self.block_tree.high_qc, None)
+		tmo_info = self.safety.make_timeout(self.pacemaker.current_round, self.block_tree.high_qc, None, self.node_id)
 
 
 

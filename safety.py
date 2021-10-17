@@ -45,7 +45,7 @@ class Safety:
             return None
     
 
-    def make_vote(self, b, last_tc):
+    def make_vote(self, b, last_tc, node_id):
         qc_round = b.qc.vote_info.round
 
         #TODO
@@ -56,18 +56,18 @@ class Safety:
             self.__update_highest_qc_round(qc_round)
             self.__increase_highest_vote_round(b.round)
             # exec_state_id == state_id ?
-            vote_info = VoteInfo(id = b.id, round = b.round, parent_id = b.qc.vote_info.id, parent_round= qc_round, state_id = self.ledger.pending_state(b.id))
+            vote_info = VoteInfo(id = b.id, round = b.round, parent_id = b.qc.vote_info.id, parent_round= qc_round, exec_state_id = self.ledger.pending_state(b.id))
             ledger_commit_info = LedgerCommitInfo(commit_state_id = self.__commit_state_id_candidate(b.round, b.qc), vote_info_hash = Hashing.hash(vote_info))
-            return VoteMsg(vote_info = vote_info, ledger_commit_info = ledger_commit_info, high_commit_qc = self.block_tree.get_high_commit_qc())
+            return VoteMsg(vote_info = vote_info, ledger_commit_info = ledger_commit_info, high_commit_qc = self.block_tree.get_high_commit_qc(), sender= node_id)
         return None
 
-    def make_timeout(self, round, high_qc, last_tc):
+    def make_timeout(self, round, high_qc, last_tc, node_id):
         print(high_qc.vote_info.id)
         qc_round = high_qc.vote_info.round
         # if !self.valid_signatures(high_qc, last_tc):
         #     return None
         if self.__safe_to_timeout(round, qc_round, last_tc):
             self.__increase_highest_vote_round(round)
-            return TimeoutInfo(round, high_qc)
+            return TimeoutInfo(round, high_qc, node_id)
         return None
     

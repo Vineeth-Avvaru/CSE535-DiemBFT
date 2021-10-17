@@ -60,11 +60,11 @@ class LedgerCommitInfo:
         self.vote_info_hash = vote_info_hash
         
 class VoteMsg:
-    def __init__(self, vote_info, ledger_commit_info, high_commit_qc, state_id):
+    def __init__(self, vote_info, ledger_commit_info, high_commit_qc, sender):
         self.vote_info = vote_info
         self.ledger_commit_info = ledger_commit_info
         self.high_commit_qc = high_commit_qc
-        self.state_id = state_id
+        self.sender = sender
 
 class QC:
     def __init__(self, vote_info, ledger_commit_info, signatures, author):
@@ -84,10 +84,10 @@ class Block:
         self.childBlocks = childBlocks
 
 class TimeoutInfo:
-    def __init__(self, round, high_qc):
+    def __init__(self, round, high_qc, sender):
         self.round = round
         self.high_qc = high_qc
-        # sender <- u
+        self.sender = sender
         # signature <- sign(round, high_qc.round)
 
 class TC:
