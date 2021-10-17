@@ -8,7 +8,7 @@ class BlockTree:
     def __init__(self, high_qc, high_commit_qc, f, ledger, mempool, node_id):
         self.high_qc=QC(VoteInfo("genesis_id",-1,"genesis_id",-2,"genesis_state"),LedgerCommitInfo(None,""),["genesis"], node_id)
         self.high_commit_qc=QC(VoteInfo("genesis_id",-2,"genesis_id",-3,"genesis_state"),LedgerCommitInfo(None,""),["genesis"], node_id)
-        genesis_block = Block(node_id, 0, ["genesis_txn"], self.high_qc, "genesis_id")
+        genesis_block = Block(node_id, 0, ["genesis_txn"], self.high_qc, "genesis_id",[])
         self.pending_block_tree = PendingBlockTree(genesis_block)
         self.pending_votes = collections.defaultdict(set)
         self.f = f
