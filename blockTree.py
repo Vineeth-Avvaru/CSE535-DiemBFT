@@ -23,6 +23,7 @@ class BlockTree:
             self.ledger.commit(qc.vote_info.parent_id, node_id)
             print("PRCESSING QC2", qc.vote_info)
             self.mempool.update_state(qc.vote_info.id, "COMMIT")
+            print("...........PRUNE....................",qc.vote_info.parent_id)
             self.pending_block_tree.prune(qc.vote_info.parent_id)
             if(qc.vote_info.round > self.high_commit_qc.vote_info.round):
                 self.high_commit_qc = qc
@@ -127,9 +128,11 @@ class PendingBlockTree:
     # Find the block with id
     def find(self, root, id):
         print("FINDING BLOCK1", root, id)
-        if id == "genesis_id":
+        # if id == "genesis_id":
+        if id == root.id:
             return root
         else:
+            # print("********************None Block*****************", root)
             for i in range(0, len(root.childBlocks)):
                 print("FINDING BLOCK2")
                 block = root.childBlocks[i]
