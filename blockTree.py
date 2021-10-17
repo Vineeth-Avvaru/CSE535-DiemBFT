@@ -37,7 +37,7 @@ class BlockTree:
         vote_idx = Hashing.hash(v.ledger_commit_info)
         self.pending_votes[vote_idx] =   self.pending_votes[vote_idx].add(v.sign)
         if len(self.pending_votes) >= 2*self.f+1:
-            return QC(vote_info= v.vote_info, state_id= v.state_id, signatures= self.pending_votes[vote_idx], author= node_id)
+            return QC(vote_info= v.vote_info,ledger_commit_info = v.ledger_commit_info, signatures= self.pending_votes[vote_idx], author= node_id)
         return None
 
     def generate_block(self, txns, current_round):
