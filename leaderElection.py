@@ -43,4 +43,5 @@ class LeaderElection:
         if round in self.reputation_leaders.keys():
             return self.reputation_leaders[round]
         
-        return self.validators[(round//2)%len(self.validators)]
+        # return self.validators[(round//2)%len(self.validators)]
+        return (round//2)%len(self.validators)
