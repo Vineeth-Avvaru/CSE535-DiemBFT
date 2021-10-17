@@ -30,25 +30,32 @@ class Pacemaker:
         if timeout_info.round < self.current_round:
             return None
 
-        print("pm 1")
+        print("CHeck timeout")
+        if timeout_info.round  in self.pending_timeouts.keys():
+            print("tmo senders: ",len(self.pending_timeouts[timeout_info.round]))
+
+        # print("pm 1")
         if timeout_info.round not in self.pending_timeouts.keys():
             self.pending_timeouts[timeout_info.round] = [timeout_info]
             
         else:
-            print("pm 11")
+            # print("pm 11")
             tmo_senders = [t.sender for t in self.pending_timeouts[timeout_info.round] if t is not None]
 
             if timeout_info.sender not in tmo_senders:
                 self.pending_timeouts[timeout_info.round].append(timeout_info)
-        print("pm 2")
+        # print("pm 2")
 
         tmo_senders = [t.sender for t in self.pending_timeouts[timeout_info.round] if t is not None]
 
-        print("pm 3")
+        # print("pm 3")
 
         if len(tmo_senders) == self.config['f'] + 1:
             # stop_timer(self.current_round)
             self.local_timeout_round()
+
+        # print("config f is ", self.config['f'])
+        # print("senders is ", len(tmo_senders))
 
         if len(tmo_senders) == 2*self.config['f'] + 1:
             return TC(

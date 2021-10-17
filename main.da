@@ -46,13 +46,8 @@ class Validator(process):
 			if await(self.round_done):
 				pass
 			elif timeout(TIMEOUT):
-				print("in timeout check")
 				if self.mempool.pending_count > 0:
 					self.local_timeout_round()
-				
-
-
-
 
 	def receive(msg= (msgType, obj)):
 		output(msgType, obj)
@@ -72,13 +67,9 @@ class Validator(process):
 
 
 	def process_certificate_qc(qc):
-		print("lala1")
 		self.block_tree.process_qc(qc, self.node_id)
-		print("lala2")
 		self.leader_election.update_leaders(qc)
-		print("lala3")
 		self.advance_round_qc(qc)
-		print("lala4")
 
 	def process_proposal_msg(P):
 		process_certificate_qc(P.block.qc)
@@ -100,21 +91,14 @@ class Validator(process):
 			send(('vote_event', vote_msg), to=l)
 
 	def process_timeout_msg(M):
-		print("check1")
 		process_certificate_qc(M.tmo_info.high_qc)
-		print("check2")
-		print("prc high commit qc")
 		process_certificate_qc(M.high_commit_qc)
-		print("check3")
 		self.advance_round_tc(M.last_round_tc)
-		print("check4")
 		tc = self.pacemaker.process_remote_timeout(M)
-		print("check5")
 		if tc is not None:
 			self.advance_round_tc(tc)
 			self.round_done = True
 			process_new_round_event(tc)
-		print("check6")
 
 	def process_vote_msg(M):
 		qc = self.block_tree.process_vote(M, self.node_id)
@@ -131,17 +115,7 @@ class Validator(process):
 			send(('proposal_event', ProposalMsg(b, last_tc, self.block_tree.high_commit_qc)), to=self.validators_list)
 
 	def local_timeout_round():
-		print("before make timeout")
 		tmo_info = self.safety.make_timeout(self.pacemaker.current_round, self.block_tree.high_qc, None, self.node_id)
-
-
-
-
-		print("random check" , tmo_info.high_qc.vote_info.id)
-
-
-		print("TIMEOUT INFO1", tmo_info.round, tmo_info.high_qc.vote_info, self.block_tree.high_commit_qc)
-		print("TIMEOUT INFO2", tmo_info.high_qc.vote_info.id)
 
 
 		send(('timeout_event', TimeoutMsg(tmo_info, self.pacemaker.last_round_tc, self.block_tree.high_commit_qc)), to=self.validators_list)

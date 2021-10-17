@@ -62,7 +62,6 @@ class Safety:
         return None
 
     def make_timeout(self, round, high_qc, last_tc, node_id):
-        print(high_qc.vote_info.id)
         qc_round = high_qc.vote_info.round
         # if !self.valid_signatures(high_qc, last_tc):
         #     return None
