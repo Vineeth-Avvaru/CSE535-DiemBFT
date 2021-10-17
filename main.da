@@ -99,7 +99,7 @@ class Validator(process):
 		if vote_msg is not None:
 			l = self.leader_election.get_leader(round + 1)
 			#send vote_msg to leader_election.get_leader(current_round + 1)
-			send(('vote_event', vote_msg), to=l)
+			send(('vote_event', vote_msg), to=self.validators_list[l])
 		print("PROPOSING6")
 
 	def process_timeout_msg(M):

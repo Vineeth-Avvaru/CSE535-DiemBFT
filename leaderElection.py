@@ -44,8 +44,10 @@ class LeaderElection:
         print("UPDATE LEADER4")
         
     def get_leader(self, round):
+        print("GETTING LEADERS1")
         if round in self.reputation_leaders.keys():
             return self.reputation_leaders[round]
         
+        print("GETTING LEADERS2")
         # return self.validators[(round//2)%len(self.validators)]
         return (round//2)%len(self.validators)
