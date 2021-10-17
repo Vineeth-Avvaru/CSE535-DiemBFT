@@ -63,7 +63,7 @@ class Validator(process):
 			self.process_vote_msg(obj)
 
 		elif msgType == "timeout_event":
-			print("RECEIVE TIMEOUT MESSAGE", obj.tmo_info.round, obj.tmo_info.high_qc.vote_info, obj.last_round_tc, obj.high_commit_tc.vote_info)
+			print("RECEIVE TIMEOUT MESSAGE", obj.tmo_info.round, obj.tmo_info.high_qc.vote_info, obj.last_round_tc, obj.high_commit_qc.vote_info)
 			self.process_timeout_msg(obj)
 
 		elif msgType == "request":
