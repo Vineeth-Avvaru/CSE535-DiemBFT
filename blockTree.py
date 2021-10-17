@@ -103,10 +103,11 @@ class TimeoutMsg:
         self.high_commit_qc = high_commit_qc
 
 class ProposalMsg:
-    def __init__(self, block, last_round_tc, high_commit_qc):
+    def __init__(self, block, last_round_tc, high_commit_qc, sender):
         self.block = block
         self.last_round_tc = last_round_tc
         self.high_commit_qc = high_commit_qc
+        self.sender = sender
         # signature <- sign(block_id)
 
 class PendingBlockTree:
@@ -114,18 +115,25 @@ class PendingBlockTree:
         self.genesis_block = genesis_block
     def add(self, b):
         parent_block = self.find(self.genesis_block,b.qc.vote_info.parent_id)
+        print("PENDING BLOCK")
         parent_block.childBlocks.append(b)
         return
     # Find the block with id
     def find(self, root, id):
-        for i in range(0, len(root.childBlocks)):
-            block = root.childBlocks[i]
-            if block.id == id :
-                return block
-            else:
-                root = block
-                return self.find(root, id)
-        return 
+        print("FINDING BLOCK1", root, id)
+        if id == "genesis_id":
+            return root
+        else:
+            for i in range(0, len(root.childBlocks)):
+                rint("FINDING BLOCK2")
+                block = root.childBlocks[i]
+                if block.id == id :
+                    return block
+                else:
+                    root = block
+                    return self.find(root, id)
+        print("FINDING BLOCK3")
+        return None
 
     def prune(self,parent_id):
         self.genesis_block = self.find(self.genesis_block,parent_id)
