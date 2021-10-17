@@ -13,17 +13,16 @@ class Pacemaker:
         self.config = config
 
 
-    def get_round_timer(self, round):
-        #TODO : formula unknown
-        pass
+    # def get_round_timer(self, round):
+    #     #TODO : formula unknown
+    #     pass
 
-    def start_timer(self, new_round):
-        # handled in main module
-        pass
+    # def start_timer(self, new_round):
+    #     self.current_round = new_round
     
-    def local_timeout_round(self):
-        # handled in main module
-        pass
+    # def local_timeout_round(self):
+    #     # handled in main module
+    #     pass
 
     def process_remote_timeout(self, timeout):
         timeout_info = timeout.tmo_info
@@ -51,16 +50,16 @@ class Pacemaker:
         
         return None
 
-    def advance_round_tc(self, tc):
-        if tc is None or tc.round < self.current_round:
-            return False
-        self.last_round_tc = tc
-        # self.start_timer(tc.round + 1)
-        return True
+    # def advance_round_tc(self, tc):
+    #     if tc is None or tc.round < self.current_round:
+    #         return False
+    #     self.last_round_tc = tc
+    #     self.start_timer(tc.round + 1)
+    #     return True
 
-    def advance_round_qc(self, qc):
-        if qc.vote_info.round < self.current_round:
-            return False
-        self.last_round_tc = None
-        # self.start_timer(qc.vote_info.round + 1)
-        return True
+    # def advance_round_qc(self, qc):
+    #     if qc.vote_info.round < self.current_round:
+    #         return False
+    #     self.last_round_tc = None
+    #     self.start_timer(qc.vote_info.round + 1)
+    #     return True

@@ -9,7 +9,7 @@ class Safety:
         self.public_keys = public_keys
 
         self.highest_vote_round = 0
-        self.highest_qc_round = 0
+        self.highest_qc_round = -1
 
         self.block_tree = block_tree
         self.ledger = ledger
@@ -62,6 +62,7 @@ class Safety:
         return None
 
     def make_timeout(self, round, high_qc, last_tc):
+        print(high_qc.vote_info.id)
         qc_round = high_qc.vote_info.round
         # if !self.valid_signatures(high_qc, last_tc):
         #     return None

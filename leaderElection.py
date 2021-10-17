@@ -15,8 +15,11 @@ class LeaderElection:
         active_validators = set()
         last_authors = set()
         current_qc = qc
+        print("Leader_Election")
         i = 0
         while i < self.window_size or len(last_authors) < self.exclude_size:
+            if current_block is None:
+                break
             current_block = self.ledger.commited_block(current_qc.vote_info.parent_id)
             block_author = current_block.author
             if i < self.window_size:

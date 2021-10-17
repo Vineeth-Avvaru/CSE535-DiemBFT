@@ -5,11 +5,12 @@ import collections
 from hashing import Hashing
 
 class BlockTree:
-    def __init__(self, high_qc, high_commit_qc, f, ledger, mempool):
-        self.pending_block_tree = PendingBlockTree()
+    def __init__(self, high_qc, high_commit_qc, f, ledger, mempool, node_id):
+        self.high_qc=QC(VoteInfo("genesis_id",-1,"genesis_id",-2,"genesis_state"),LedgerCommitInfo(None,""),["genesis"], node_id)
+        self.high_commit_qc=QC(VoteInfo("genesis_id",-2,"genesis_id",-3,"genesis_state"),LedgerCommitInfo(None,""),["genesis"], node_id)
+        genesis_block = Block(node_id, 0, ["genesis_txn"], self.high_qc, "genesis_id")
+        self.pending_block_tree = PendingBlockTree(genesis_block)
         self.pending_votes = collections.defaultdict(set)
-        self.high_qc = high_qc
-        self.high_commit_qc = high_commit_qc
         self.f = f
         self.ledger = ledger
         self.mempool = mempool
@@ -36,7 +37,7 @@ class BlockTree:
         vote_idx = Hashing.hash(v.ledger_commit_info)
         self.pending_votes[vote_idx] =   self.pending_votes[vote_idx].add(v.sign)
         if len(self.pending_votes) >= 2*self.f+1:
-            return QC(vote_info= v.vote_info, state_id= v.state_id, signatures= self.pending_votes[vote_idx])
+            return QC(vote_info= v.vote_info, state_id= v.state_id, signatures= self.pending_votes[vote_idx], author= node_id)
         return None
 
     def generate_block(self, txns, current_round):
@@ -66,11 +67,12 @@ class VoteMsg:
         self.state_id = state_id
 
 class QC:
-    def __init__(self, vote_info, ledger_commit_info, signatures, state_id):
+    def __init__(self, vote_info, ledger_commit_info, signatures, author):
         self.vote_info = vote_info
         self.ledger_commit_info = ledger_commit_info
         self.signatures = signatures
-        self.state_id = state_id
+        self.author = author
+        self.sign = None
 
 class Block:
     def __init__(self, author, round, payload, qc, id = None, childBlocks = list()):
@@ -108,8 +110,8 @@ class ProposalMsg:
         # signature <- sign(block_id)
 
 class PendingBlockTree:
-    def __init__(self):
-        self.genesis_block = Block(author= 'genesis', round=0, payload = None , qc = None, id = None, childBlocks=list())
+    def __init__(self, genesis_block):
+        self.genesis_block = genesis_block
     def add(self, b):
         parent_block = self.find(self.genesis_block,b.qc.vote_info.parent_id)
         parent_block.childBlocks.append(b)
