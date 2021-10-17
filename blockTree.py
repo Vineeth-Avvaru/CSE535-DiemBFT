@@ -24,7 +24,7 @@ class BlockTree:
             print("PRCESSING QC2", qc.vote_info)
             self.mempool.update_state(qc.vote_info.id, "COMMIT")
             print("...........PRUNE....................",qc.vote_info.parent_id)
-            self.pending_block_tree.prune(qc.vote_info.parent_id)
+            self.pending_block_tree.prune(qc.vote_info.id, node_id)
             if(qc.vote_info.round > self.high_commit_qc.vote_info.round):
                 self.high_commit_qc = qc
         if(qc.vote_info.round > self.high_qc.vote_info.round):
@@ -48,7 +48,7 @@ class BlockTree:
 
     def generate_block(self, txns, current_round):
         # Have to set author
-        block = Block(author=1 , round = current_round, payload = txns, qc = self.high_qc)
+        block = Block(author=1 , round = current_round, payload = txns, qc = self.high_qc, childBlocks=[])
         block.id = Hashing.hash(block.author, block.round, block.payload["transaction_id"], self.high_qc.vote_info.id, self.high_qc.signatures)
         return block
 
@@ -122,7 +122,8 @@ class PendingBlockTree:
         self.genesis_block = genesis_block
 
     def add(self, b):
-        parent_block = self.find(self.genesis_block,b.qc.vote_info.parent_id)
+        print("IDCHECK1")
+        parent_block = self.find(self.genesis_block,b.qc.vote_info.id)
         print("PENDING BLOCK")
         parent_block.childBlocks.append(b)
         print("ADDED BLOCK")
@@ -130,29 +131,31 @@ class PendingBlockTree:
 
     # Find the block with id
     def find(self, root, id):
-        print("FINDING BLOCK1", root.id, len(root.childBlocks), id)
+        print("IDCHECK2", root)
+        # print("FINDING BLOCK1", root.id, len(root.childBlocks), id)
         res = None
-        if id == root.id:
-            return root
-        else:
-            # print("********************None Block*****************", root)
-            
-            for i in range(0, len(root.childBlocks)):
-                print("FINDING BLOCK2")
-                block = root.childBlocks[i]
-                node_found = self.find(block, id)
-                if node_found:
-                    res = node_found
-                # if block.id == id :
-                #     return block
-                # else:
-                #     root = block
-                #     return self.find(root, id)
-            return res
-        print("FINDING BLOCK3")
+        if root is not None:
+            if id == root.id:
+                return root
+            else:
+                
+                for i in range(0, len(root.childBlocks)):
+                    print("FINDING BLOCK2")
+                    block = root.childBlocks[i]
+                    node_found = self.find(block, id)
+                    if node_found:
+                        res = node_found
+                return res
+            print("FINDING BLOCK3")
         return res
 
-    def prune(self,parent_id):
+    def prune(self, parent_id, node_id):
+        print("IDCHECK3")
         print("PRUNING LOCAL BLOCK TREE", parent_id, self.genesis_block)
         self.genesis_block = self.find(self.genesis_block,parent_id)
+        print("********************None Block*****************", "CURRENT GEN BLOCK", self.genesis_block, "********************None Block*****************")
+        if self.genesis_block is None:
+            print( "ASSIGNING DEFAULT GENESIS BLOCK", node_id)
+            self.high_qc = QC(VoteInfo("genesis_id",-1,"genesis_id",-2,"genesis_state"),LedgerCommitInfo(None,""),["genesis"], node_id)
+            self.genesis_block = Block(node_id, 0, ["genesis_txn"], self.high_qc, "genesis_id", [])
         return
