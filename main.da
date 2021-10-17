@@ -8,7 +8,7 @@ from ledger import Ledger
 from safety import Safety
 from hashing import Hashing
 TIMEOUT = 3
-N = 3
+N = 4
 
 def init_config():
 	config = {
@@ -170,7 +170,9 @@ class Validator(process):
 			self.local_timeout_round()
 
 			
+		# print(len(tmo_senders), 2*self.pacemaker.config['f'] + 1)
 		if len(tmo_senders) == 2*self.pacemaker.config['f'] + 1:
+			# print("generating TC")
 			return TC(
 				timeout_info.round,
 				[t.high_qc.vote_info.round for t in self.pacemaker.pending_timeouts[timeout_info.round]],
