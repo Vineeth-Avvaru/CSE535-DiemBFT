@@ -58,7 +58,7 @@ class Safety:
             # exec_state_id == state_id ?
             vote_info = VoteInfo(id = b.id, round = b.round, parent_id = b.qc.vote_info.id, parent_round= qc_round, exec_state_id = self.ledger.pending_state(b.id))
             ledger_commit_info = LedgerCommitInfo(commit_state_id = self.__commit_state_id_candidate(b.round, b.qc), vote_info_hash = Hashing.hash(vote_info))
-            return VoteMsg(vote_info = vote_info, ledger_commit_info = ledger_commit_info, high_commit_qc = self.block_tree.get_high_commit_qc(), sender= node_id)
+            return VoteMsg(vote_info = vote_info, ledger_commit_info = ledger_commit_info, high_commit_qc = self.block_tree.high_commit_qc, sender= node_id)
         return None
 
     def make_timeout(self, round, high_qc, last_tc, node_id):
