@@ -1,5 +1,6 @@
 import nacl.encoding
 import nacl.hash
+import pickle
 
 class Hashing:
     def __init__(self):
@@ -7,8 +8,7 @@ class Hashing:
 
     def temphash(b):
         HASHER = nacl.hash.sha256
-        digest = HASHER(str(b).encode('utf-8'), encoder=nacl.encoding.HexEncoder)
-        return digest.decode('utf-8')
+        return (HASHER(pickle.dumps(b))).decode("utf-8")
 
     def hash(*argv):
         # # #print("HAASHING1")

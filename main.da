@@ -237,7 +237,7 @@ class Validator(process):
 			self.local_timeout_round()
 
 		#print("REMOTE TIMEOUT :", self.node_id," round : ", self.pacemaker.current_round)
-		print("TMO SENDERS: ", len(tmo_senders), 2*self.pacemaker.config['f'] + 1, " , Node :", self.node_id)
+		#print("TMO SENDERS: ", len(tmo_senders), 2*self.pacemaker.config['f'] + 1, " , Node :", self.node_id)
 		if len(tmo_senders) == 2*self.pacemaker.config['f'] + 1:
 			# #print("generating TC")
 			return TC(
