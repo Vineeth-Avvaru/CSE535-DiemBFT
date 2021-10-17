@@ -35,7 +35,7 @@ class BlockTree:
     def process_vote(self, v, node_id):
         self.process_qc(v.high_commit_qc, node_id)
         vote_idx = Hashing.hash(v.ledger_commit_info)
-        self.pending_votes[vote_idx] =   self.pending_votes[vote_idx].add(v.sign)
+        self.pending_votes[vote_idx].add(v.sign)
         if len(self.pending_votes) >= 2*self.f+1:
             return QC(vote_info= v.vote_info,ledger_commit_info = v.ledger_commit_info, signatures= self.pending_votes[vote_idx], author= node_id)
         return None
@@ -65,6 +65,7 @@ class VoteMsg:
         self.ledger_commit_info = ledger_commit_info
         self.high_commit_qc = high_commit_qc
         self.sender = sender
+        self.sign = None
 
 class QC:
     def __init__(self, vote_info, ledger_commit_info, signatures, author):
