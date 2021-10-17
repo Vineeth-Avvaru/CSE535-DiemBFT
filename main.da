@@ -70,7 +70,7 @@ class Validator(process):
 
 
 	def process_certificate_qc(qc):
-		print("PROCESSCERT1")
+		print("PROCESSCERT1", qc.vote_info)
 		self.block_tree.process_qc(qc, self.node_id)
 		print("PROCESSCERT2")
 		self.leader_election.update_leaders(qc)
@@ -103,7 +103,7 @@ class Validator(process):
 		print("PROPOSING6")
 
 	def process_timeout_msg(M):
-		print("TIMEOUT1")
+		print("TIMEOUT1", M.tmo_info.high_qc.vote_info)
 		process_certificate_qc(M.tmo_info.high_qc)
 		print("TIMEOUT2")
 		process_certificate_qc(M.high_commit_qc)

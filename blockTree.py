@@ -16,9 +16,13 @@ class BlockTree:
         self.mempool = mempool
     
     def process_qc(self, qc, node_id):
+        # print("PROCESSING QC INIT")
+        # print("PRCESSING QC1", QC.vote_info)
+        # print("PROCESSING QC", QC.vote_info.id)
         if qc.ledger_commit_info.commit_state_id is not None:
             self.ledger.commit(qc.vote_info.parent_id, node_id)
-            self.mempool.update_state(qc.vote_info.id.payload, "COMMIT")
+            print("PRCESSING QC2", qc.vote_info)
+            self.mempool.update_state(qc.vote_info.id, "COMMIT")
             self.pending_block_tree.prune(qc.vote_info.parent_id)
             if(qc.vote_info.round > self.high_commit_qc.vote_info.round):
                 self.high_commit_qc = qc
@@ -33,6 +37,7 @@ class BlockTree:
         return 
 
     def process_vote(self, v, node_id):
+        print("PRCESSING VOTE", v.high_commit_qc.vote_info)
         self.process_qc(v.high_commit_qc, node_id)
         vote_idx = Hashing.hash(v.ledger_commit_info)
         self.pending_votes[vote_idx].add(v.sign)
@@ -137,5 +142,6 @@ class PendingBlockTree:
         return None
 
     def prune(self,parent_id):
+        print("PRUNING LOCAL BLOCK TREE", parent_id, self.genesis_block)
         self.genesis_block = self.find(self.genesis_block,parent_id)
         return
