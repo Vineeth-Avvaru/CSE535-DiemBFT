@@ -45,7 +45,7 @@ class BlockTree:
     def generate_block(self, txns, current_round):
         # Have to set author
         block = Block(author=1 , round = current_round, payload = txns, qc = self.high_qc, childBlocks=[])
-        block.id = Hashing.hash(block.author, block.round, block.payload, self.high_qc.vote_info.id, self.high_qc.signatures)
+        block.id = Hashing.hash(block.author, block.round, block.payload, self.high_qc.vote_info.id)
         return block
 
 class SignatureInfo:
