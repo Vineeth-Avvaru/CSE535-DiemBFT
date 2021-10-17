@@ -94,7 +94,7 @@ class Validator(process):
 		print("PROPOSING4")
 		self.block_tree.execute_and_insert(P.block) # Adds a new speculative state to the Ledger
 		print("PROPOSING4.5")
-		vote_msg = self.safety.make_vote(P.block, P.last_round_tc, self.node_id)
+		vote_msg = self.safety.make_vote(P, P.block, P.last_round_tc, self.node_id)
 		print("PROPOSING5")
 		if vote_msg is not None:
 			l = self.leader_election.get_leader(round + 1)

@@ -45,7 +45,7 @@ class Safety:
             return None
     
 
-    def make_vote(self, b, last_tc, node_id):
+    def make_vote(self, P, b, last_tc, node_id):
         qc_round = b.qc.vote_info.round
 
         #TODO

@@ -125,7 +125,7 @@ class PendingBlockTree:
             return root
         else:
             for i in range(0, len(root.childBlocks)):
-                rint("FINDING BLOCK2")
+                print("FINDING BLOCK2")
                 block = root.childBlocks[i]
                 if block.id == id :
                     return block
