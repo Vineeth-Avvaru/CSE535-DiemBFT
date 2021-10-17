@@ -18,7 +18,7 @@ class Mempool:
 
 	def update_state(self, transaction_id, state=None):
 
-		# print("trying to pop from mempool", transaction_id, state)
+		# #print("trying to pop from mempool", transaction_id, state)
 		try:
 		# for n in self.transaction_list:
 			self.transaction_list.remove(transaction_id)
@@ -27,9 +27,9 @@ class Mempool:
 		except IndexError:
 			return
 		# for t in self.transaction_list:
-		# 	print("COMPARING", t['transaction_id'],  transaction_id)
+		# 	#print("COMPARING", t['transaction_id'],  transaction_id)
 		# 	if t['transaction_id'] == transaction_id:
-		# 		# print("FOUND TRANSACTION ID")
+		# 		# #print("FOUND TRANSACTION ID")
 		# 		t['state'] = state
 		# 		self.pending_count -= 1
 
@@ -39,12 +39,12 @@ class Mempool:
 	def get_transactions(self):
 		# transaction_selected = None
 
-		# print("CURRENT TRANSACTION LIST", self.transaction_list)
+		# #print("CURRENT TRANSACTION LIST", self.transaction_list)
 		# for t in self.transaction_list:
 		# 	if t['state'] == "NOT_PROCESSED":
 		# 		transaction_selected = t
 		# 		return transaction_selected
 
 		# return transaction_selected
-		# print("trying to pop from mempool1")
+		# #print("trying to pop from mempool1")
 		return self.transaction_list.popleft()

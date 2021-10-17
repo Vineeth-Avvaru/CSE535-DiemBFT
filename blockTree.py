@@ -33,11 +33,11 @@ class BlockTree:
         return 
 
     def process_vote(self, v, node_id, signature):
-        print("in process vote")
+        #print("in process vote")
         self.process_qc(v.high_commit_qc, node_id)
         vote_idx = v.ledger_commit_info
         self.pending_votes[vote_idx].add(v.sign)
-        print("Access passed")
+        #print("Access passed")
         if len(self.pending_votes) >= 2*self.f+1:
             return QC(vote_info= v.vote_info,ledger_commit_info = v.ledger_commit_info, signatures= self.pending_votes[vote_idx], author= node_id, signature= signature)
         return None

@@ -15,7 +15,7 @@ class LeaderElection:
         active_validators = set()
         last_authors = set()
         current_qc = qc
-        print("Leader_Election")
+        #print("Leader_Election")
         i = 0
         while i < self.window_size or len(last_authors) < self.exclude_size:
             if current_block is None:

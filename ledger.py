@@ -36,23 +36,23 @@ class Ledger:
         
 
     def speculate(self,prev_block_id, block_id, txns):
-        print("Speculate: " , prev_block_id , block_id , txns)
+        #print("Speculate: " , prev_block_id , block_id , txns)
         
         if prev_block_id not in self.pending_block_map:
             #TODO: Ask the TA about commited state block
             # commited_state_block = self.committed_block(prev_block_id)
             # if not commited_state_block:
                 # return
-            print("No prev block")
-            # print(block_id, txns)
+            #print("No prev block")
+            # #print(block_id, txns)
             newBlock = SpeculatedBlock(block_id = block_id, txns = txns)
-            # print("I AM HERE1")
+            # #print("I AM HERE1")
             self.pending_block_map[block_id] = newBlock
-            # print("I AM HERE2")
+            # #print("I AM HERE2")
 
         else:
             prev_block = self.pending_block_map[prev_block_id]
-            print("prev block is there")
+            #print("prev block is there")
             newBlock = SpeculatedBlock(prev = prev_block, txns = txns, block_id = block_id)
             prev_block.next = newBlock
             self.pending_block_map[block_id] = newBlock
@@ -72,16 +72,16 @@ class Ledger:
         if block_id not in self.pending_block_map:
             return
         block = self.pending_block_map[block_id]
-        # print(block)
+        # #print(block)
         if block.prev is not None:
-            # print("COMMIT1")
+            # #print("COMMIT1")
             self.commit(block.prev.block_id, node_id)
         try:
-            # print("LEDGER1", self.pending_block_map)
+            # #print("LEDGER1", self.pending_block_map)
             ledger_file = open(self.ledger_file_path + str(node_id) + ".txt", "a")
         except OSError:
-            print("Error in reading file: ", self.ledger_file_path + str(node_id) + ".txt")
-            print(OSError)
+            #print("Error in reading file: ", self.ledger_file_path + str(node_id) + ".txt")
+            #print(OSError)
             return
         ledger_file.write(str(block))
         del self.pending_block_map[block_id]
@@ -91,8 +91,8 @@ class Ledger:
         return
 
     def print_map(self):
-        for k,v in self.pending_block_map.items():
-            print(k, v)
+        # for k,v in self.pending_block_map.items():
+            #print(k, v)
 
         return
 
