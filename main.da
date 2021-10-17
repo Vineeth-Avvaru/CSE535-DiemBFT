@@ -96,8 +96,8 @@ class Validator(process):
 		self.advance_round_tc(M.last_round_tc)
 		tc = self.process_remote_timeout(M)
 		if tc is not None:
+			print("TC NOT NONE\n\n\n")
 			self.advance_round_tc(tc)
-			self.round_done = True
 			process_new_round_event(tc)
 
 	def process_vote_msg(M):
