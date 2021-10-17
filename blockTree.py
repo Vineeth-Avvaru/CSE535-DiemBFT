@@ -36,9 +36,9 @@ class BlockTree:
         #print("in process vote")
         self.process_qc(v.high_commit_qc, node_id)
         vote_idx = Hashing.temphash(v.ledger_commit_info)
-        print("PENDING SIGN: ", v.sign.signature, ", in node: ", node_id, ", vote_idx : ", vote_idx)
+        # print("PENDING SIGN: ", v.sign.signature, ", in node: ", node_id, ", vote_idx : ", vote_idx)
         self.pending_votes[vote_idx].add(v.sign.signature)
-        print("PENDING VOTES: ", len(self.pending_votes[vote_idx]))
+        # print("PENDING VOTES: ", len(self.pending_votes[vote_idx]))
         #print("Access passed")
         if len(self.pending_votes[vote_idx]) == 2*self.f+1:
             
@@ -127,7 +127,9 @@ class PendingBlockTree:
         self.genesis_block = genesis_block
 
     def add(self, b):
-        parent_block = self.find(self.genesis_block,b.qc.vote_info.id)
+        print("GEN BLOCK", self.genesis_block.id, b.qc.vote_info.id)
+        parent_block = self.find(self.genesis_block, b.qc.vote_info.id)
+
         parent_block.childBlocks.append(b)
         return
 
@@ -148,8 +150,7 @@ class PendingBlockTree:
         return res
 
     def prune(self, parent_id, node_id):
-        self.genesis_block = self.find(self.genesis_block,parent_id)
-        if self.genesis_block is None:
-            self.high_qc = QC(VoteInfo("genesis_id",-1,"genesis_id",-2,"genesis_state", -1),LedgerCommitInfo(None,""),["genesis"], node_id, None)
-            self.genesis_block = Block(node_id, 0, ["genesis_txn"], self.high_qc, "genesis_id", [])
+        pruned_node = self.find(self.genesis_block,parent_id)
+        if pruned_node:
+            self.genesis_block = pruned_node
         return
