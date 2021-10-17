@@ -33,21 +33,15 @@ class LeaderElection:
         return random.choice(updated_validators)
 
     def update_leaders(self, qc):
-        print("UPDATE LEADER1")
         extended_round = qc.vote_info.round
         qc_round = qc.vote_info.round
         current_round = self.pacemaker.current_round
-        print("UPDATE LEADER2")
         if extended_round + 1 == qc_round and qc_round + 1  == current_round:
             self.reputation_leaders[current_round+1] = self.elect_reputation_leader(qc)
-            print("UPDATE LEADER3")
-        print("UPDATE LEADER4")
         
     def get_leader(self, round):
-        print("GETTING LEADERS1")
         if round in self.reputation_leaders.keys():
             return self.reputation_leaders[round]
         
-        print("GETTING LEADERS2")
         # return self.validators[(round//2)%len(self.validators)]
         return (round//2)%len(self.validators)

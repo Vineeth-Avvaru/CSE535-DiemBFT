@@ -5,7 +5,6 @@ class SpeculatedBlock(object):
     def __init__(self, prev = None, txns = "", block_id = 0):
         #TODO: fix state_id based on hash function
         if prev is not None:
-            print("OPERAND1", prev.state_id, txns)
             self.state_id = prev.state_id +  "#" +txns['transaction_id']
         else:
             self.state_id = txns['transaction_id']
@@ -16,17 +15,12 @@ class SpeculatedBlock(object):
 
     def __str__(self):
         s = "\n"
-        print("OPERAND2")
         s += "BlockID = "+ str(self.block_id) + "\n"
-        print("OPERAND3")
-        s += "Txns: "+str(self.txns)+ "\n"
-        print("OPERAND4")
+        s += "Txns: "+str(self.txns['transaction_id'])+ "\n"
         s += "StateID: "+ str(self.state_id)+ "\n"
         if self.prev is not None:
-            print("OPERAND5")
             s+= "Prev Block ID: " + str(self.prev.block_id)+ "\n"
         if self.next is not None:
-            print("OPERAND6")
             s+= "Next Block ID: " + str(self.next.block_id)+ "\n"
         s+="-----------------------------------------------"
         return s
@@ -70,17 +64,16 @@ class Ledger:
 
     def commit(self, block_id, node_id):
 
-        print("COMMITING HAPPENING HERE")
         #TODO: Prune neglected branches, ask TA how to commit blocks
 
         if block_id not in self.pending_block_map:
-            print("Block id not found in pending ledger state")
             return
         block = self.pending_block_map[block_id]
         if block.prev is not None:
+            # print("COMMIT1")
             self.commit(block.prev.block_id, node_id)
         try:
-            print("LEDGER1")
+            # print("LEDGER1", self.pending_block_map)
             ledger_file = open(self.ledger_file_path + str(node_id) + ".txt", "a")
         except OSError:
             print("Error in reading file: ", self.ledger_file_path + str(node_id) + ".txt")

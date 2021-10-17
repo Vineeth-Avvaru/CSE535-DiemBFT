@@ -16,14 +16,9 @@ class BlockTree:
         self.mempool = mempool
     
     def process_qc(self, qc, node_id):
-        # print("PROCESSING QC INIT")
-        # print("PRCESSING QC1", QC.vote_info)
-        # print("PROCESSING QC", QC.vote_info.id)
         if qc.ledger_commit_info.commit_state_id is not None:
             self.ledger.commit(qc.vote_info.parent_id, node_id)
-            print("PRCESSING QC2", qc.vote_info)
             self.mempool.update_state(qc.vote_info.id, "COMMIT")
-            print("...........PRUNE....................",qc.vote_info.parent_id)
             self.pending_block_tree.prune(qc.vote_info.id, node_id)
             if(qc.vote_info.round > self.high_commit_qc.vote_info.round):
                 self.high_commit_qc = qc
@@ -38,7 +33,6 @@ class BlockTree:
         return 
 
     def process_vote(self, v, node_id):
-        print("PRCESSING VOTE", v.high_commit_qc.vote_info)
         self.process_qc(v.high_commit_qc, node_id)
         vote_idx = Hashing.hash(v.ledger_commit_info)
         self.pending_votes[vote_idx].add(v.sign)
@@ -122,17 +116,12 @@ class PendingBlockTree:
         self.genesis_block = genesis_block
 
     def add(self, b):
-        print("IDCHECK1")
         parent_block = self.find(self.genesis_block,b.qc.vote_info.id)
-        print("PENDING BLOCK")
         parent_block.childBlocks.append(b)
-        print("ADDED BLOCK")
         return
 
     # Find the block with id
     def find(self, root, id):
-        print("IDCHECK2", root)
-        # print("FINDING BLOCK1", root.id, len(root.childBlocks), id)
         res = None
         if root is not None:
             if id == root.id:
@@ -140,22 +129,16 @@ class PendingBlockTree:
             else:
                 
                 for i in range(0, len(root.childBlocks)):
-                    print("FINDING BLOCK2")
                     block = root.childBlocks[i]
                     node_found = self.find(block, id)
                     if node_found:
                         res = node_found
                 return res
-            print("FINDING BLOCK3")
         return res
 
     def prune(self, parent_id, node_id):
-        print("IDCHECK3")
-        print("PRUNING LOCAL BLOCK TREE", parent_id, self.genesis_block)
         self.genesis_block = self.find(self.genesis_block,parent_id)
-        print("********************None Block*****************", "CURRENT GEN BLOCK", self.genesis_block, "********************None Block*****************")
         if self.genesis_block is None:
-            print( "ASSIGNING DEFAULT GENESIS BLOCK", node_id)
             self.high_qc = QC(VoteInfo("genesis_id",-1,"genesis_id",-2,"genesis_state"),LedgerCommitInfo(None,""),["genesis"], node_id)
             self.genesis_block = Block(node_id, 0, ["genesis_txn"], self.high_qc, "genesis_id", [])
         return

@@ -70,53 +70,35 @@ class Validator(process):
 
 
 	def process_certificate_qc(qc):
-		print("PROCESSCERT1", qc.vote_info)
 		self.block_tree.process_qc(qc, self.node_id)
-		print("PROCESSCERT2")
 		self.leader_election.update_leaders(qc)
-		print("PROCESSCERT3")
 		self.advance_round_qc(qc)
-		print("PROCESSCERT4")
 
 	def process_proposal_msg(P):
 		process_certificate_qc(P.block.qc)
 		process_certificate_qc(P.high_commit_qc)
-		print("PROPOSING1")
 		self.advance_round_tc(P.last_round_tc)
-		print("PROPOSING2")
 		round = self.pacemaker.current_round
 		leader = self.leader_election.get_leader(round)
 
-		print("PROPOSING3")
 		if P.block.round != round or P.sender != leader or P.block.author != leader:
 			return
 
-		print("PROPOSING4")
 		self.block_tree.execute_and_insert(P.block) # Adds a new speculative state to the Ledger
-		print("PROPOSING4.5")
 		vote_msg = self.safety.make_vote(P, P.block, P.last_round_tc, self.node_id)
-		print("PROPOSING5")
 		if vote_msg is not None:
 			l = self.leader_election.get_leader(round + 1)
 			#send vote_msg to leader_election.get_leader(current_round + 1)
 			send(('vote_event', vote_msg), to=self.validators_list[l])
-		print("PROPOSING6")
 
 	def process_timeout_msg(M):
-		print("TIMEOUT1", M.tmo_info.high_qc.vote_info)
 		process_certificate_qc(M.tmo_info.high_qc)
-		print("TIMEOUT2")
 		process_certificate_qc(M.high_commit_qc)
-		print("TIMEOUT3")
 		self.advance_round_tc(M.last_round_tc)
-		print("TIMEOUT4")
 		tc = self.process_remote_timeout(M)
-		print("TIMEOUT5")
 		if tc is not None:
-			print("TC NOT NONE\n\n\n")
 			self.advance_round_tc(tc)
 			process_new_round_event(tc)
-		print("TIMEOUT6")
 
 	def process_vote_msg(M):
 		qc = self.block_tree.process_vote(M, self.node_id)
@@ -125,18 +107,11 @@ class Validator(process):
 			process_new_round_event(None)
 
 	def process_new_round_event(last_tc):
-		print("in leader LeaderElection")
-		print("CURRENT NODE ID", self.node_id)
-		print("CURRENT LEADER", self.leader_election.get_leader(self.pacemaker.current_round))
 		if self.node_id == self.leader_election.get_leader(self.pacemaker.current_round):
-			print("i am leader1")
 			# Leader code: generate proposal.
 			b = self.block_tree.generate_block(self.mempool.get_transactions(), self.pacemaker.current_round)
-			print("i am leader2")
 			#broadcast ProposalMsg; last tc; block_tree:high commit qci
 			send(('proposal_event', ProposalMsg(b, last_tc, self.block_tree.high_commit_qc, self.node_id)), to=self.validators_list)
-			print("i am leader3")
-		print("i am leader4")
 
 	def local_timeout_round():
 		tmo_info = self.safety.make_timeout(self.pacemaker.current_round, self.block_tree.high_qc, self.pacemaker.last_round_tc, self.node_id)
@@ -167,10 +142,6 @@ class Validator(process):
 		
 		if timeout_info.round < self.pacemaker.current_round:
 			return None
-			
-		print("CHeck timeout")
-		if timeout_info.round  in self.pacemaker.pending_timeouts.keys():
-			print("tmo senders: ",timeout_info.round,":", len(self.pacemaker.pending_timeouts[timeout_info.round]))
 			
 		# print("pm 1")
 		if timeout_info.round not in self.pacemaker.pending_timeouts.keys():
@@ -222,7 +193,6 @@ def main():
 	num_servers = N
 	num_clients = N
 
-	print("INIT HAPPENING HERE")
 	clients = new(Client, num = num_clients)
 	validators = new(Validator, num= num_servers)
 	#Can add new variables to setup if necessary
