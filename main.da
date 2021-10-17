@@ -9,6 +9,8 @@ from safety import Safety
 from hashing import Hashing
 from nacl.encoding import HexEncoder
 from nacl.signing import SigningKey, VerifyKey
+from logging_file import LogStuff
+
 TIMEOUT = 1
 N = 4
 
@@ -45,7 +47,8 @@ class Validator(process):
 		self.ledger = Ledger(file_path)
 		self.mempool = Mempool()
 		self.block_tree = BlockTree(0, 0, 0, self.ledger, self.mempool, self.node_id)
-		self.hashing = Hashing()
+		# self.hashing = Hashing()
+		self.logging = LogStuff()
 
 		self.safety = Safety("", [], self.block_tree, self.ledger)
 		

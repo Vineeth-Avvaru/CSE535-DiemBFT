@@ -3,6 +3,7 @@ import sys
 import ledger
 import collections
 from hashing import Hashing
+from logging_file import LogStuff
 
 class BlockTree:
     def __init__(self, high_qc, high_commit_qc, f, ledger, mempool, node_id):
@@ -33,6 +34,7 @@ class BlockTree:
         return 
 
     def process_vote(self, v, node_id, signature):
+        LogStuff.log_to_file("***********Processing Vote***************", node_id)
         #print("in process vote")
         self.process_qc(v.high_commit_qc, node_id)
         vote_idx = Hashing.temphash(v.ledger_commit_info)
