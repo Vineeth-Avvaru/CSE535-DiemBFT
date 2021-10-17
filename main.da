@@ -110,12 +110,9 @@ class Validator(process):
 	def process_new_round_event(last_tc):
 		print("in leader LeaderElection")
 		if self.node_id == self.leader_election.get_leader(self.pacemaker.current_round):
-		    print("i am leader")
+			print("i am leader")
 			# Leader code: generate proposal.
-			b = self.block_tree.generate_block(
-				self.mempool.get_transactions(),
-				self.pacemaker.current_round
-			)
+			b = self.block_tree.generate_block(self.mempool.get_transactions(), self.pacemaker.current_round)
 			#broadcast ProposalMsghb; last tc; block_tree:high commit qci
 			send(('proposal_event', ProposalMsg(b, last_tc, self.block_tree.high_commit_qc)), to=self.validators_list)
 
