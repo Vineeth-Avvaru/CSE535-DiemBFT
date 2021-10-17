@@ -35,10 +35,13 @@ class BlockTree:
     def process_vote(self, v, node_id, signature):
         #print("in process vote")
         self.process_qc(v.high_commit_qc, node_id)
-        vote_idx = v.ledger_commit_info
-        self.pending_votes[vote_idx].add(v.sign)
+        vote_idx = Hashing.temphash(v.ledger_commit_info)
+        print("PENDING SIGN: ", v.sign.signature, ", in node: ", node_id)
+        self.pending_votes[vote_idx].add(v.sign.signature)
+        print("PENDING VOTES: ", len(self.pending_votes[vote_idx]))
         #print("Access passed")
-        if len(self.pending_votes) >= 2*self.f+1:
+        if len(self.pending_votes[vote_idx]) == 2*self.f+1:
+            
             return QC(vote_info= v.vote_info,ledger_commit_info = v.ledger_commit_info, signatures= self.pending_votes[vote_idx], author= node_id, signature= signature)
         return None
 

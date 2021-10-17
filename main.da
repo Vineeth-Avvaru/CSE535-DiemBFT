@@ -79,13 +79,13 @@ class Validator(process):
 			self.process_proposal_msg(obj)
 
 		elif msgType == "vote_event":
-			print("VOTE from : ", sender_id, ", to: ", self.node_id)
+			#print("VOTE from : ", sender_id, ", to: ", self.node_id)
 			self.validator_keys[sender_id].verify(signature, encoder=HexEncoder)
-			#print("VERIFIED VOTE MESSAGE")
+			print("VERIFIED VOTE MESSAGE")
 			self.process_vote_msg(obj)
 
 		elif msgType == "timeout_event":
-			print("TIMEOUT from : ", sender_id, ", to: ", self.node_id)
+			#print("TIMEOUT from : ", sender_id, ", to: ", self.node_id)
 			# #print("RECEIVE TIMEOUT MESSAGE", obj.tmo_info.round, obj.tmo_info.high_qc.vote_info, obj.last_round_tc, obj.high_commit_qc.vote_info)
 			self.validator_keys[sender_id].verify(signature, encoder=HexEncoder)
 			#print("VERIFIED TIMEOUT MESSAGE")
@@ -118,8 +118,8 @@ class Validator(process):
 			#print("VERIFY QC SIGNATURE")
 			self.validator_keys[qc.author].verify(qc.sign, encoder=HexEncoder)
 
-			for sign_info in qc.signatures:
-				self.validator_keys[sign_info.node_id].verify(sign_info.signature, encoder=HexEncoder)
+			#for sign_info in qc.signatures:
+			#	self.validator_keys[sign_info.node_id].verify(sign_info.signature, encoder=HexEncoder)
 
 	def verify_tc_signature(timeout_msg):
 		if timeout_msg.tmo_info.high_qc.vote_info.id != "genesis_id":
@@ -236,8 +236,8 @@ class Validator(process):
 			self.round_done = True
 			self.local_timeout_round()
 
-			
-		# #print(len(tmo_senders), 2*self.pacemaker.config['f'] + 1)
+		#print("REMOTE TIMEOUT :", self.node_id," round : ", self.pacemaker.current_round)
+		print("TMO SENDERS: ", len(tmo_senders), 2*self.pacemaker.config['f'] + 1, " , Node :", self.node_id)
 		if len(tmo_senders) == 2*self.pacemaker.config['f'] + 1:
 			# #print("generating TC")
 			return TC(
