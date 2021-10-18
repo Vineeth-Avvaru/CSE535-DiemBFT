@@ -14,11 +14,9 @@ class LeaderElection:
 
     def elect_reputation_leader(self, qc):
         # LogStuff.log_to_file("********Electing Leader********")
-        # print("*******************Electing Leaders*****************")
         active_validators = set()
         last_authors = set()
         current_qc = qc
-        #print("Leader_Election")
         i = 0
         while i < self.window_size or len(last_authors) < self.exclude_size:
             if current_block is None:
@@ -36,7 +34,6 @@ class LeaderElection:
         return random.choice(updated_validators)
 
     def update_leaders(self, qc):
-        # print("*******************Updating Leaders*****************")
         # LogStuff.log_to_file("********Updating Leader********")
         extended_round = qc.vote_info.round
         qc_round = qc.vote_info.round

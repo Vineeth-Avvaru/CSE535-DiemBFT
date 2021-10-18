@@ -87,7 +87,6 @@ class Safety:
 
     def verify_tc_signature(self, timeout_msg):
         if timeout_msg.tmo_info.high_qc.vote_info.id != "genesis_id":
-            #print("VERIFY TIMEOUT_MSG SIGNATURE")
             self.__validator_keys[timeout_msg.tmo_info.sender].verify(timeout_msg.tmo_info.signature, encoder=HexEncoder)
             
         if timeout_msg.last_round_tc is not None:
