@@ -6,6 +6,7 @@ configurations =  {
   "timeout" : 1,
   "nReplicas":4,
   "nClients": 4,
-  "default_testcase": "test_case_config1.json"
+  "default_testcase": "test_case_config1.json",
+  "delta": 0.25
 }
 

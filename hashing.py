@@ -6,7 +6,7 @@ class Hashing:
     def __init__(self):
         pass
 
-    def temphash(b):
+    def hashObj(b):
         HASHER = nacl.hash.sha256
         return (HASHER(pickle.dumps(b))).decode("utf-8")
 

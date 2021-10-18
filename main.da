@@ -33,18 +33,15 @@ def init_config(new_test_config):
 
 class Validator(process):
 
-	def setup(node_id, validators_list, config): 
+	def setup(node_id, validators_list, signing_key, validator_public_keys, client_public_keys, config): 
 		self.node_id = node_id
 		self.validators_list = validators_list
 		self.config = config
 
-		self.client_keys = {}
-		self.validator_keys = {}
+		self.client_keys = client_public_keys
+		self.validator_keys = validator_public_keys
 
-		self.signing_key = SigningKey.generate()
-		self.verify_key = self.signing_key.verify_key
-		self.verify_key_hex = self.verify_key.encode(encoder=HexEncoder)
-		self.signature = self.signing_key.sign(b'VALIDATOR', encoder=HexEncoder)
+		self.signing_key = signing_key
 
 
 	def run():
@@ -57,7 +54,7 @@ class Validator(process):
 		# self.hashing = Hashing()
 		# self.logging = LogStuff()
 
-		self.safety = Safety("", [], self.block_tree, self.ledger)
+		self.safety = Safety(self.signing_key, self.validator_keys, self.client_keys, self.block_tree, self.ledger)
 		
 
 		self.pacemaker = Pacemaker(self.block_tree, self.config)
@@ -65,7 +62,7 @@ class Validator(process):
 		self.run_done = False
 
 
-		send(('validator_key', self.verify_key_hex, self.node_id, None), to=self.validators_list)
+		#send(('validator_key', self.verify_key_hex, self.node_id, None), to=self.validators_list)
 
 		while not self.run_done or len(self.mempool.transaction_list) > 0:
 			
@@ -74,7 +71,7 @@ class Validator(process):
 			self.round_done = False
 			if await(self.round_done == True):
 				pass
-			elif timeout(config['timeout']):
+			elif timeout(self.pacemaker.get_round_timer()):
 				if len(self.mempool.transaction_list) > 0:
 					self.local_timeout_round()
 		#print(len(self.mempool.transaction_list))
@@ -84,14 +81,16 @@ class Validator(process):
 
 		if msgType == "proposal_event":
 			#print("PROPASAL TIMEOUT MESSAGE", obj.block.author)
-			self.validator_keys[sender_id].verify(signature, encoder=HexEncoder)
+			self.safety.verify_validator_signature(signature, sender_id)
+			#self.validator_keys[sender_id].verify(signature, encoder=HexEncoder)
 			#print("VERIFIED PROPASAL MESSAGE")
 			# LogStuff.log_to_file("VERIFIED PROPASAL MESSAGE")
 			self.process_proposal_msg(obj)
 
 		elif msgType == "vote_event":
 			#print("VOTE from : ", sender_id, ", to: ", self.node_id)
-			self.validator_keys[sender_id].verify(signature, encoder=HexEncoder)
+			self.safety.verify_validator_signature(signature, sender_id)
+			#self.validator_keys[sender_id].verify(signature, encoder=HexEncoder)
 			print("VERIFIED VOTE MESSAGE")
 			LogStuff.log_to_file("VERIFIED VOTE MESSAGE")
 			self.process_vote_msg(obj)
@@ -99,14 +98,16 @@ class Validator(process):
 		elif msgType == "timeout_event":
 			#print("TIMEOUT from : ", sender_id, ", to: ", self.node_id)
 			# #print("RECEIVE TIMEOUT MESSAGE", obj.tmo_info.round, obj.tmo_info.high_qc.vote_info, obj.last_round_tc, obj.high_commit_qc.vote_info)
-			self.validator_keys[sender_id].verify(signature, encoder=HexEncoder)
+			#self.validator_keys[sender_id].verify(signature, encoder=HexEncoder)
+			self.safety.verify_validator_signature(signature, sender_id)
 			#print("VERIFIED TIMEOUT MESSAGE")
 			# LogStuff.log_to_file("VERIFIED TIMEOUT MESSAGE")
 			self.process_timeout_msg(obj)
 
 		elif msgType == "request":
 			#print("received request command")
-			self.client_keys[sender_id].verify(signature, encoder=HexEncoder)
+			self.safety.verify_client_signature(signature, sender_id)
+			#self.client_keys[sender_id].verify(signature, encoder=HexEncoder)
 			
 			self.mempool.insert(obj)
 			#print("CLIENT REQUEST VERIFIED AND INSERTED")
@@ -116,35 +117,8 @@ class Validator(process):
 			self.round_done = True
 			self.run_done = True
 
-		elif msgType == 'client_key':
-			verify_key = VerifyKey(obj, encoder=HexEncoder)
-			self.client_keys[sender_id] = verify_key
-			#print("GOT CLIENT KEY: ", sender_id)
-
-		elif msgType == 'validator_key':
-			verify_key = VerifyKey(obj, encoder=HexEncoder)
-			self.validator_keys[sender_id] = verify_key
-			#print("GOT VALIDATOR KEY: ", sender_id)
-
-	def verify_qc_signature(qc):
-		if qc.vote_info.id != "genesis_id":
-			#print("VERIFY QC SIGNATURE")
-			self.validator_keys[qc.author].verify(qc.sign, encoder=HexEncoder)
-
-			for sign_info in qc.signatures:
-				self.validator_keys[sign_info.node_id].verify(sign_info.signature, encoder=HexEncoder)
-
-	def verify_tc_signature(timeout_msg):
-		if timeout_msg.tmo_info.high_qc.vote_info.id != "genesis_id":
-			#print("VERIFY TIMEOUT_MSG SIGNATURE")
-			self.validator_keys[timeout_msg.tmo_info.sender].verify(timeout_msg.tmo_info.signature, encoder=HexEncoder)
-
-			if timeout_msg.last_round_tc is not None:
-				for sign_info in timeout_msg.last_round_tc.tmo_signatures:
-					self.validator_keys[sign_info.node_id].verify(sign_info.signature, encoder=HexEncoder)
-
 	def process_certificate_qc(qc):
-		verify_qc_signature(qc)
+		self.safety.verify_qc_signature(qc)
 		self.block_tree.process_qc(qc, self.node_id)
 		##print("block tree process qc passed")
 		self.leader_election.update_leaders(qc)
@@ -165,14 +139,14 @@ class Validator(process):
 		self.block_tree.execute_and_insert(P.block) # Adds a new speculative state to the Ledger
 
 		#signature = self.signing_key.sign(b'VALIDATOR', encoder=HexEncoder)
-		vote_msg = self.safety.make_vote(P, P.block, P.last_round_tc, self.node_id, self.signature)
+		vote_msg = self.safety.make_vote(P, P.block, P.last_round_tc, self.node_id)
 		if vote_msg is not None:
 			l = self.leader_election.get_leader(round + 1)
 			#send vote_msg to leader_election.get_leader(current_round + 1)
-			send(('vote_event', vote_msg, self.node_id, self.signature), to=self.validators_list[l])
+			send(('vote_event', vote_msg, self.node_id, self.safety.get_signature()), to=self.validators_list[l])
 
 	def process_timeout_msg(M):
-		verify_tc_signature(M)
+		self.safety.verify_tc_signature(M)
 		process_certificate_qc(M.tmo_info.high_qc)
 		process_certificate_qc(M.high_commit_qc)
 		self.advance_round_tc(M.last_round_tc)
@@ -182,7 +156,7 @@ class Validator(process):
 			process_new_round_event(tc)
 
 	def process_vote_msg(M):
-		qc = self.block_tree.process_vote(M, self.node_id, self.signature)
+		qc = self.block_tree.process_vote(M, self.node_id, self.safety.get_signature())
 		#print("Process vote passed")
 		if qc is not None:
 			#print("in qc check pass")
@@ -199,13 +173,13 @@ class Validator(process):
 			LogStuff.log_to_file_node("PROCESSING NEW ROUND EVENT",self.node_id)
 			#broadcast ProposalMsg; last tc; block_tree:high commit qci
 			#signature = self.signing_key.sign(b'VALIDATOR', encoder=HexEncoder)
-			send(('proposal_event', ProposalMsg(b, last_tc, self.block_tree.high_commit_qc, self.node_id), self.node_id, self.signature), to=self.validators_list)
+			send(('proposal_event', ProposalMsg(b, last_tc, self.block_tree.high_commit_qc, self.node_id), self.node_id, self.safety.get_signature()), to=self.validators_list)
 
 	def local_timeout_round():
-		tmo_info = self.safety.make_timeout(self.pacemaker.current_round, self.block_tree.high_qc, self.pacemaker.last_round_tc, self.node_id, self.signature)
+		tmo_info = self.safety.make_timeout(self.pacemaker.current_round, self.block_tree.high_qc, self.pacemaker.last_round_tc, self.node_id)
 
 
-		send(('timeout_event', TimeoutMsg(tmo_info, self.pacemaker.last_round_tc, self.block_tree.high_commit_qc), self.node_id, self.signature), to=self.validators_list)
+		send(('timeout_event', TimeoutMsg(tmo_info, self.pacemaker.last_round_tc, self.block_tree.high_commit_qc), self.node_id, self.safety.get_signature()), to=self.validators_list)
 
 	def start_timer(new_round):
 		self.pacemaker.current_round = new_round
@@ -266,19 +240,21 @@ class Validator(process):
 
 class Client(process):
 
-	def setup(node_id, validators_list, config):
+	def setup(node_id, validators_list, signing_key, validator_public_keys, config):
 		self.node_id = node_id
 		self.validators_list = validators_list
 		self.config = config
 
-		self.signing_key = SigningKey.generate()
+		self.validator_keys = validator_public_keys
+
+		self.signing_key = signing_key
 		self.verify_key = self.signing_key.verify_key
 		self.verify_key_hex = self.verify_key.encode(encoder=HexEncoder)
 
 
 
 	def run():
-		send(('client_key', self.verify_key_hex, self.node_id, None), to=self.validators_list)
+		#send(('client_key', self.verify_key_hex, self.node_id, None), to=self.validators_list)
 		#bytes(str(self.node_id),'utf-8')
 		signed_hex = self.signing_key.sign(b'Client', encoder=HexEncoder)
 		for i in range(2):
@@ -301,13 +277,34 @@ def main():
 
 		clients = new(Client, num = num_clients)
 		validators = new(Validator, num= num_servers)
+
+		client_public_keys = {}
+		validator_public_keys = {}
+
+		client_private_keys = {}
+		validator_private_keys = {}
+
+		for i in range(len(validators)):
+			signing_key = SigningKey.generate()
+			verify_key = self.signing_key.verify_key
+
+			validator_public_keys[i] = verify_key
+			validator_private_keys[i] = signing_key
+
+		for i in range(len(clients)):
+			signing_key = SigningKey.generate()
+			verify_key = self.signing_key.verify_key
+
+			client_public_keys[i] = verify_key
+			client_private_keys[i] = signing_key
+		
 		#Can add new variables to setup if necessary
 		LogStuff.log_to_file("Setting up validators")
 		for i, validator in enumerate(validators):
-			setup(validator, args=(i, list(validators), config))
+			setup(validator, args=(i, list(validators), validator_private_keys[i], validator_public_keys, client_public_keys, config))
 
 		for i, client in enumerate(clients):
 			LogStuff.log_to_file("Setting up client"+ str(i))
-			setup(client, args=(i, list(validators), config))
+			setup(client, args=(i, list(validators), client_private_keys[i], validator_public_keys, config))
 		start(validators)
 		start(clients)
