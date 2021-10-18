@@ -77,15 +77,17 @@ class Ledger:
         if block.prev is not None:
             # #print("COMMIT1")
             self.commit(block.prev.block_id, node_id)
-        try:
-            # #print("LEDGER1", self.pending_block_map)
-            ledger_file = open(self.ledger_file_path + str(node_id) + ".txt", "a")
-        except OSError:
-            #print("Error in reading file: ", self.ledger_file_path + str(node_id) + ".txt")
-            #print(OSError)
-            return
-        LogStuff.log_to_file_param("Comitting Block to ledger with BlockID", block_id)
-        ledger_file.write(str(block))
+
+        if block.txns:
+            try:
+                # #print("LEDGER1", self.pending_block_map)
+                ledger_file = open(self.ledger_file_path + str(node_id) + ".txt", "a")
+            except OSError:
+                #print("Error in reading file: ", self.ledger_file_path + str(node_id) + ".txt")
+                #print(OSError)
+                return
+            LogStuff.log_to_file_param("Comitting Block to ledger with BlockID", block_id)
+            ledger_file.write(str(block))
         del self.pending_block_map[block_id]
         return
 

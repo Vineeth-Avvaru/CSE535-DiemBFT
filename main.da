@@ -279,6 +279,9 @@ class Client(process):
 			}
 
 			send(('request', obj, self.node_id, signed_hex), to=self.validators_list)
+
+		send(('request', {'transaction_id': '', 'node_id':self.node_id}, self.node_id, signed_hex), to=self.validators_list)
+		send(('request', {'transaction_id': '', 'node_id':self.node_id}, self.node_id, signed_hex), to=self.validators_list)
 		send(('done', {}, self.node_id, None), to=self.validators_list)
 		pass
 
