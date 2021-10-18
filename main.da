@@ -10,19 +10,11 @@ from hashing import Hashing
 from nacl.encoding import HexEncoder
 from nacl.signing import SigningKey, VerifyKey
 from logging_file import LogStuff
-
-TIMEOUT = 1
-N = 4
-
+from config import configurations
 
 def init_config():
 	LogStuff.log_to_file("Initializing Config file")
-	config = {
-		'window_size': 1,
-		'exclude_size': 1,
-		'seed':"grabage",
-		'f' : 1
-	}
+	config = configurations
 	return config
 
 class Validator(process):
@@ -68,7 +60,7 @@ class Validator(process):
 			self.round_done = False
 			if await(self.round_done == True):
 				pass
-			elif timeout(TIMEOUT):
+			elif timeout(configurations['timeout']):
 				if len(self.mempool.transaction_list) > 0:
 					self.local_timeout_round()
 		#print(len(self.mempool.transaction_list))
@@ -289,8 +281,8 @@ class Client(process):
 
 def main():
 	
-	num_servers = N
-	num_clients = N
+	num_servers = configurations['nReplicas']
+	num_clients = configurations['nClients']
 
 	clients = new(Client, num = num_clients)
 	validators = new(Validator, num= num_servers)

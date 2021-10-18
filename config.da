@@ -1,0 +1,10 @@
+configurations =  {
+  "window_size": 1,
+  "exclude_size": 1,
+  "seed": "consistency",
+  "f": 1,
+  "timeout" : 3,
+  "nReplicas":4,
+  "nClients": 4
+}
+
