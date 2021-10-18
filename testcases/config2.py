@@ -1,13 +1,13 @@
 test_config =  [
   {
-    "nClients": 4,
-    "nReplicas": 4,
+    "nClients": 7,
+    "nReplicas": 7,
     "num_transactions": 2,
     "seed": "consistency",
-    "f": 1,
+    "f": 2,
     "timeout": 1,
     "window_size": 1,
     "exclude_size": 1,
-    "test_case_details": "Default test case",
+    "test_case_details": "Test case with 7 clients and 2 faulty nodes",
   }
 ]

@@ -130,7 +130,6 @@ class PendingBlockTree:
         self.genesis_block = genesis_block
 
     def add(self, b):
-        print("GEN BLOCK", self.genesis_block.id, b.qc.vote_info.id)
         parent_block = self.find(self.genesis_block, b.qc.vote_info.id)
 
         parent_block.childBlocks.append(b)

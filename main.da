@@ -4,6 +4,7 @@ import argparse
 
 from random import randint
 from blockTree import *
+from threading import Timer
 from leaderElection import LeaderElection
 from pacemaker import Pacemaker
 from mempool import Mempool
@@ -274,6 +275,8 @@ class Client(process):
 		self.verify_key = self.signing_key.verify_key
 		self.verify_key_hex = self.verify_key.encode(encoder=HexEncoder)
 
+
+
 	def run():
 		send(('client_key', self.verify_key_hex, self.node_id, None), to=self.validators_list)
 		#bytes(str(self.node_id),'utf-8')
@@ -283,14 +286,10 @@ class Client(process):
 				'transaction_id' : str(self.node_id*2 + i),
 				'node_id' : self.node_id
 			}
-
 			send(('request', obj, self.node_id, signed_hex), to=self.validators_list)
-
-		send(('request', {'transaction_id': '', 'node_id':self.node_id}, self.node_id, signed_hex), to=self.validators_list)
-		send(('request', {'transaction_id': '', 'node_id':self.node_id}, self.node_id, signed_hex), to=self.validators_list)
+		for i in range(config["f"]*config['f']+1):
+			send(('request', {'transaction_id': '', 'node_id':self.node_id}, self.node_id, signed_hex), to=self.validators_list)
 		send(('done', {}, self.node_id, None), to=self.validators_list)
-		pass
-
 
 
 def main():
