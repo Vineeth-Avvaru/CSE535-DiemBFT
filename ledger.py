@@ -37,17 +37,13 @@ class Ledger:
         
 
     def speculate(self,prev_block_id, block_id, txns):
-        #print("Speculate: " , prev_block_id , block_id , txns)
         
         if prev_block_id not in self.pending_block_map:
             newBlock = SpeculatedBlock(block_id = block_id, txns = txns)
-            # #print("I AM HERE1")
             self.pending_block_map[block_id] = newBlock
-            # #print("I AM HERE2")
 
         else:
             prev_block = self.pending_block_map[prev_block_id]
-            #print("prev block is there")
             newBlock = SpeculatedBlock(prev = prev_block, txns = txns, block_id = block_id)
             prev_block.next = newBlock
             self.pending_block_map[block_id] = newBlock
@@ -65,18 +61,13 @@ class Ledger:
         if block_id not in self.pending_block_map:
             return
         block = self.pending_block_map[block_id]
-        # #print(block)
         if block.prev is not None:
-            # #print("COMMIT1")
             self.commit(block.prev.block_id, node_id)
 
         if block.txns:
             try:
-                # #print("LEDGER1", self.pending_block_map)
                 ledger_file = open(self.ledger_file_path + str(node_id) + ".txt", "a")
             except OSError:
-                #print("Error in reading file: ", self.ledger_file_path + str(node_id) + ".txt")
-                #print(OSError)
                 return
             LogStuff.log_to_file_param("Comitting Block to ledger with BlockID", block_id)
             ledger_file.write(str(block))
@@ -87,8 +78,6 @@ class Ledger:
         return
 
     def print_map(self):
-        # for k,v in self.pending_block_map.items():
-            #print(k, v)
 
         return
 
