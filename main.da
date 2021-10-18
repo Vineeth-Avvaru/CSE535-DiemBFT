@@ -1,4 +1,7 @@
 import sys
+import json
+import argparse
+
 from random import randint
 from blockTree import *
 from leaderElection import LeaderElection
@@ -11,17 +14,28 @@ from nacl.encoding import HexEncoder
 from nacl.signing import SigningKey, VerifyKey
 from logging_file import LogStuff
 from config import configurations
+from testcases.config1 import test_config
 
-def init_config():
-	LogStuff.log_to_file("Initializing Config file")
+def override_config(config, new_test_config):
+	for k, v in new_test_config.items():
+		config[k] = v
+
+	return config
+
+
+def init_config(new_test_config):
+	LogStuff.log_to_file("Initializing new test case config")
 	config = configurations
+	config = override_config(config, new_test_config)
+	LogStuff.log_to_file("Initialized new test case config " + str(config))
 	return config
 
 class Validator(process):
 
-	def setup(node_id, validators_list): 
+	def setup(node_id, validators_list, config): 
 		self.node_id = node_id
 		self.validators_list = validators_list
+		self.config = config
 
 		self.client_keys = {}
 		self.validator_keys = {}
@@ -33,7 +47,6 @@ class Validator(process):
 
 
 	def run():
-		self.config = init_config()
 		self.file_path = "./ledger_map"
 		
 
@@ -60,7 +73,7 @@ class Validator(process):
 			self.round_done = False
 			if await(self.round_done == True):
 				pass
-			elif timeout(configurations['timeout']):
+			elif timeout(config['timeout']):
 				if len(self.mempool.transaction_list) > 0:
 					self.local_timeout_round()
 		#print(len(self.mempool.transaction_list))
@@ -252,9 +265,10 @@ class Validator(process):
 
 class Client(process):
 
-	def setup(node_id, validators_list):
+	def setup(node_id, validators_list, config):
 		self.node_id = node_id
 		self.validators_list = validators_list
+		self.config = config
 
 		self.signing_key = SigningKey.generate()
 		self.verify_key = self.signing_key.verify_key
@@ -281,18 +295,20 @@ class Client(process):
 
 def main():
 	
-	num_servers = configurations['nReplicas']
-	num_clients = configurations['nClients']
+	for new_test_config in test_config:
+		config = init_config(new_test_config)
+		num_servers = config['nReplicas']
+		num_clients = config['nClients']
 
-	clients = new(Client, num = num_clients)
-	validators = new(Validator, num= num_servers)
-	#Can add new variables to setup if necessary
-	LogStuff.log_to_file("Setting up validators")
-	for i, validator in enumerate(validators):
-		setup(validator, args=(i, list(validators)))
+		clients = new(Client, num = num_clients)
+		validators = new(Validator, num= num_servers)
+		#Can add new variables to setup if necessary
+		LogStuff.log_to_file("Setting up validators")
+		for i, validator in enumerate(validators):
+			setup(validator, args=(i, list(validators), config))
 
-	for i, client in enumerate(clients):
-		LogStuff.log_to_file("Setting up client"+ str(i))
-		setup(client, args=(i, list(validators)))
-	start(validators)
-	start(clients)
+		for i, client in enumerate(clients):
+			LogStuff.log_to_file("Setting up client"+ str(i))
+			setup(client, args=(i, list(validators), config))
+		start(validators)
+		start(clients)

@@ -9,9 +9,12 @@ class LogStuff:
         logging.info("Node:" + str(nodeID) + " : " + s )
         pass
     
-    def log_to_file(s):
+    def log_to_file(s, level="INFO"):
         logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',filename='logFile.log',level=logging.INFO, datefmt='%Y-%m-%d %H:%M:%S')
-        logging.info(s)
+        if level == "ERROR":
+            logging.error(s)
+        else:
+            logging.info(s)
         pass
 
     def log_to_file_param(s, p):

@@ -3,8 +3,9 @@ configurations =  {
   "exclude_size": 1,
   "seed": "consistency",
   "f": 1,
-  "timeout" : 3,
+  "timeout" : 1,
   "nReplicas":4,
-  "nClients": 4
+  "nClients": 4,
+  "default_testcase": "test_case_config1.json"
 }
 
