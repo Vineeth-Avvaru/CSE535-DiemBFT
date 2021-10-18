@@ -34,6 +34,7 @@ class Ledger:
         """Mapping block id to the block object"""
         self.pending_block_map = collections.defaultdict(SpeculatedBlock)
         self.ledger_file_path = file_path
+        self.commit_blocks = collections.deque()
         
 
     def speculate(self,prev_block_id, block_id, txns):
@@ -61,6 +62,7 @@ class Ledger:
         if block_id not in self.pending_block_map:
             return
         block = self.pending_block_map[block_id]
+
         if block.prev is not None:
             self.commit(block.prev.block_id, node_id)
 
@@ -70,15 +72,17 @@ class Ledger:
             except OSError:
                 return
             LogStuff.log_to_file_param("Comitting Block to ledger with BlockID", block_id)
+            self.committed_block(block_id)
             ledger_file.write(str(block))
         del self.pending_block_map[block_id]
         return
 
     def committed_block(self, block_id):
+        self.commit_blocks.append(block_id)
         return
 
     def print_map(self):
-
+        print(self.commit_blocks)
         return
 
 

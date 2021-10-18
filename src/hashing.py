@@ -15,6 +15,3 @@ class Hashing:
         for arg in argv:
             s += str(arg) + "#"
         return s[:-1]
-        # HASHER = nacl.hash.sha256
-        # digest = HASHER(s.encode('utf-8'), encoder=nacl.encoding.HexEncoder)
-        # return digest.decode('utf-8')
