@@ -38,7 +38,7 @@ class BlockTree:
         LogStuff.log_to_file_node("***********Processing Vote***************", node_id)
         #print("in process vote")
         self.process_qc(v.high_commit_qc, node_id)
-        vote_idx = Hashing.temphash(v.ledger_commit_info)
+        vote_idx = Hashing.hashObj(v.ledger_commit_info)
         # print("PENDING SIGN: ", v.sign.signature, ", in node: ", node_id, ", vote_idx : ", vote_idx)
         self.pending_votes[vote_idx].add(v.sign)
         # print("PENDING VOTES: ", len(self.pending_votes[vote_idx]))

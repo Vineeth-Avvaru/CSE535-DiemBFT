@@ -8,4 +8,5 @@ test_config =  [{
   "window_size": 1,
   "exclude_size": 1,
   "test_case_details": "Default test case",
+  "delta": 0.25,
 }]

@@ -70,7 +70,7 @@ class Validator(process):
 			self.round_done = False
 			if await(self.round_done == True):
 				pass
-			elif timeout(config['timeout']):
+			elif timeout(self.pacemaker.get_round_timer()):
 				if len(self.mempool.transaction_list) > 0:
 					self.local_timeout_round()
 		#print(len(self.mempool.transaction_list))

@@ -13,9 +13,8 @@ class Pacemaker:
         self.config = config
 
 
-    # def get_round_timer(self, round):
-    #     #TODO : formula unknown
-    #     pass
+    def get_round_timer(self, round = 0):
+        return 4 * self.config['delta']
 
     # def start_timer(self, new_round):
     #     self.current_round = new_round
