@@ -45,7 +45,7 @@ class Validator(process):
 
 
 	def run():
-		self.file_path = "./ledger_map"
+		self.file_path = "./ledger_files/ledger_map"
 		
 
 		self.ledger = Ledger(file_path)
@@ -237,7 +237,7 @@ class Client(process):
 				'node_id' : self.node_id
 			}
 			send(('request', obj, self.node_id, signed_hex), to=self.validators_list)
-		for i in range(config["f"]*config['f']+1):
+		for i in range(config["f"]*(config['f']+1)):
 			send(('request', {'transaction_id': '', 'node_id':self.node_id}, self.node_id, signed_hex), to=self.validators_list)
 		send(('done', {}, self.node_id, None), to=self.validators_list)
 
