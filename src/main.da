@@ -3,6 +3,7 @@ import json
 import argparse
 
 from random import randint
+import random
 from blockTree import *
 from threading import Timer
 from leaderElection import LeaderElection
@@ -33,7 +34,7 @@ def init_config(new_test_config):
 
 class Validator(process):
 
-	def setup(node_id, validators_list, signing_key, validator_public_keys, client_public_keys, config): 
+	def setup(node_id, validators_list, signing_key, validator_public_keys, client_public_keys, config, check_f): 
 		self.node_id = node_id
 		self.validators_list = validators_list
 		self.config = config
@@ -42,17 +43,17 @@ class Validator(process):
 		self.validator_keys = validator_public_keys
 
 		self.signing_key = signing_key
+		self.check_f = check_f
+		self.f_threshold = 0.99999
 
 
 	def run():
-		self.file_path = "./ledger_files/ledger_map"
+		self.file_path = "../ledger_files/ledger_map"
 		
 
 		self.ledger = Ledger(file_path)
 		self.mempool = Mempool()
 		self.block_tree = BlockTree(0, 0, 0, self.ledger, self.mempool, self.node_id)
-		# self.hashing = Hashing()
-		# self.logging = LogStuff()
 
 		self.safety = Safety(self.signing_key, self.validator_keys, self.client_keys, self.block_tree, self.ledger)
 		
@@ -62,10 +63,7 @@ class Validator(process):
 		self.run_done = False
 
 
-		#send(('validator_key', self.verify_key_hex, self.node_id, None), to=self.validators_list)
-
 		while not self.run_done or len(self.mempool.transaction_list) > 0:
-			
 			self.round_done = False
 			if await(self.round_done == True):
 				pass
@@ -73,32 +71,34 @@ class Validator(process):
 				if len(self.mempool.transaction_list) > 0:
 					self.local_timeout_round()
 
+	def check_if_dropped(f_bool):
+		if not f_bool:
+			return True
+		return random.random() < f_threshold
+
+
 	def receive(msg= (msgType, obj, sender_id, signature)):
-		# output(msgType, obj)
 
 		if msgType == "proposal_event":
-			self.safety.verify_validator_signature(signature, sender_id)
-			#self.validator_keys[sender_id].verify(signature, encoder=HexEncoder)
-			# LogStuff.log_to_file("VERIFIED PROPASAL MESSAGE")
-			self.process_proposal_msg(obj)
+			if check_if_dropped(self.check_f):
+				self.safety.verify_validator_signature(signature, sender_id)
+				self.process_proposal_msg(obj)
 
 		elif msgType == "vote_event":
-			self.safety.verify_validator_signature(signature, sender_id)
-			#self.validator_keys[sender_id].verify(signature, encoder=HexEncoder)
-			LogStuff.log_to_file("VERIFIED VOTE MESSAGE")
-			self.process_vote_msg(obj)
+			if check_if_dropped(self.check_f):
+				self.safety.verify_validator_signature(signature, sender_id)
+				LogStuff.log_to_file("VERIFIED VOTE MESSAGE")
+				self.process_vote_msg(obj)
 
 		elif msgType == "timeout_event":
-			#self.validator_keys[sender_id].verify(signature, encoder=HexEncoder)
-			self.safety.verify_validator_signature(signature, sender_id)
-			# LogStuff.log_to_file("VERIFIED TIMEOUT MESSAGE")
-			self.process_timeout_msg(obj)
+			if check_if_dropped(self.check_f):
+				self.safety.verify_validator_signature(signature, sender_id)
+				self.process_timeout_msg(obj)
 
 		elif msgType == "request":
-			self.safety.verify_client_signature(signature, sender_id)
-			#self.client_keys[sender_id].verify(signature, encoder=HexEncoder)
-			
-			self.mempool.insert(obj)
+			if check_if_dropped(self.check_f):
+				self.safety.verify_client_signature(signature, sender_id)
+				self.mempool.insert(obj)
 
 		elif msgType == 'done':
 			self.round_done = True
@@ -122,11 +122,12 @@ class Validator(process):
 
 		self.block_tree.execute_and_insert(P.block) # Adds a new speculative state to the Ledger
 
-		#signature = self.signing_key.sign(b'VALIDATOR', encoder=HexEncoder)
 		vote_msg = self.safety.make_vote(P, P.block, P.last_round_tc, self.node_id)
 		if vote_msg is not None:
 			l = self.leader_election.get_leader(round + 1)
-			#send vote_msg to leader_election.get_leader(current_round + 1)
+
+			if not check_if_dropped(check_f):
+				vote_msg.vote_info.id = -1
 			send(('vote_event', vote_msg, self.node_id, self.safety.get_signature()), to=self.validators_list[l])
 
 	def process_timeout_msg(M):
@@ -149,16 +150,15 @@ class Validator(process):
 		if len(self.mempool.transaction_list) > 0 and self.node_id == self.leader_election.get_leader(self.pacemaker.current_round):
 			# Leader code: generate proposal.
 			b = self.block_tree.generate_block(self.mempool.get_transactions(), self.pacemaker.current_round)
-			#if self.node_id == 0:
 			LogStuff.log_to_file_node("PROCESSING NEW ROUND EVENT",self.node_id)
-			#broadcast ProposalMsg; last tc; block_tree:high commit qci
-			#signature = self.signing_key.sign(b'VALIDATOR', encoder=HexEncoder)
+			if not check_if_dropped(check_f):
+				b.block.id = -1
 			send(('proposal_event', ProposalMsg(b, last_tc, self.block_tree.high_commit_qc, self.node_id), self.node_id, self.safety.get_signature()), to=self.validators_list)
 
 	def local_timeout_round():
 		tmo_info = self.safety.make_timeout(self.pacemaker.current_round, self.block_tree.high_qc, self.pacemaker.last_round_tc, self.node_id)
-
-
+		if not check_if_dropped(check_f):
+			tmo_info.high_qc.vote_info.id = -1
 		send(('timeout_event', TimeoutMsg(tmo_info, self.pacemaker.last_round_tc, self.block_tree.high_commit_qc), self.node_id, self.safety.get_signature()), to=self.validators_list)
 
 	def start_timer(new_round):
@@ -202,7 +202,6 @@ class Validator(process):
 			self.local_timeout_round()
 
 		if len(tmo_senders) == 2*self.pacemaker.config['f'] + 1:
-			# LogStuff.log_to_file_param("Getting TC for round", time)
 			return TC(
 				timeout_info.round,
 				[t.high_qc.vote_info.round for t in self.pacemaker.pending_timeouts[timeout_info.round]],
@@ -228,8 +227,6 @@ class Client(process):
 
 
 	def run():
-		#send(('client_key', self.verify_key_hex, self.node_id, None), to=self.validators_list)
-		#bytes(str(self.node_id),'utf-8')
 		signed_hex = self.signing_key.sign(b'Client', encoder=HexEncoder)
 		for i in range(2):
 			obj = {
@@ -271,11 +268,15 @@ def main():
 
 			client_public_keys[i] = verify_key
 			client_private_keys[i] = signing_key
+
+
+		f_validators = random.sample(validators, config['f'])
+
 		
 		#Can add new variables to setup if necessary
 		LogStuff.log_to_file("Setting up validators")
 		for i, validator in enumerate(validators):
-			setup(validator, args=(i, list(validators), validator_private_keys[i], validator_public_keys, client_public_keys, config))
+			setup(validator, args=(i, list(validators), validator_private_keys[i], validator_public_keys, client_public_keys, config, validator in f_validators))
 
 		for i, client in enumerate(clients):
 			LogStuff.log_to_file("Setting up client"+ str(i))
