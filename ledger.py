@@ -4,7 +4,7 @@ from logging_file import LogStuff
 
 class SpeculatedBlock(object):
     def __init__(self, prev = None, txns = "", block_id = 0):
-        #TODO: fix state_id based on hash function
+
         if prev is not None:
             self.state_id = prev.state_id +  "#" +txns
         else:
@@ -40,12 +40,6 @@ class Ledger:
         #print("Speculate: " , prev_block_id , block_id , txns)
         
         if prev_block_id not in self.pending_block_map:
-            #TODO: Ask the TA about commited state block
-            # commited_state_block = self.committed_block(prev_block_id)
-            # if not commited_state_block:
-                # return
-            #print("No prev block")
-            # #print(block_id, txns)
             newBlock = SpeculatedBlock(block_id = block_id, txns = txns)
             # #print("I AM HERE1")
             self.pending_block_map[block_id] = newBlock
@@ -67,8 +61,6 @@ class Ledger:
         return pending_state_block.state_id
 
     def commit(self, block_id, node_id):
-
-        #TODO: Prune neglected branches, ask TA how to commit blocks
 
         if block_id not in self.pending_block_map:
             return
