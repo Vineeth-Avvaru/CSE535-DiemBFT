@@ -1,6 +1,6 @@
 test_config =  [
   {
-    "nClients": 4,
+    "nClients": 3,
     "nReplicas": 4,
     "num_transactions": 2,
     "seed": "consistency",
